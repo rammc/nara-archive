@@ -2,15 +2,23 @@
 from __future__ import annotations
 
 import json
+import threading
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import requests
 from tqdm import tqdm
 
 from .api import NaraClient
 from .utils import OutputPaths, atomic_write_text, get_logger
+
+
+class JobCancelled(RuntimeError):
+    """Raised when a worker checks its ``cancel_event`` and it's set."""
+
+
+ProgressCallback = Callable[[dict[str, Any]], None]
 
 
 def _load_state(state_path: Path) -> dict[str, dict[str, str]]:
@@ -49,6 +57,9 @@ def download_all(
     rate: float = 1.0,
     client: NaraClient | None = None,
     metadata: dict[str, Any] | None = None,
+    progress_callback: ProgressCallback | None = None,
+    cancel_event: threading.Event | None = None,
+    show_progress_bars: bool = True,
 ) -> dict[str, int]:
     """Download all digital objects from ``metadata.json`` into ``output/raw/``.
 
@@ -56,6 +67,10 @@ def download_all(
     stay polite. Errors per file are logged and never abort the run.
 
     Returns a small counter dict for the CLI summary.
+
+    When called from the job manager, ``progress_callback`` is invoked after
+    every file with a dict event, and ``cancel_event`` is checked between
+    files. The CLI passes neither and gets the existing tqdm output.
     """
     log = get_logger()
     paths.ensure()
@@ -73,10 +88,39 @@ def download_all(
 
     total_objects = sum(u.get("digital_object_count", 0) for u in units)
     counts = {"downloaded": 0, "skipped": 0, "failed": 0}
+    total_bytes_running = 0
+    files_done = 0
 
-    with tqdm(total=total_objects, desc="files", unit="file") as pbar_files, \
-         tqdm(total=_known_bytes(units), desc="bytes", unit="B", unit_scale=True) as pbar_bytes:
+    def _emit(unit: dict, obj: dict, status: str, bytes_written: int) -> None:
+        nonlocal files_done, total_bytes_running
+        files_done += 1
+        total_bytes_running += bytes_written
+        if progress_callback is None:
+            return
+        try:
+            progress_callback({
+                "phase": "downloading",
+                "current": files_done,
+                "total": total_objects,
+                "current_naid": str(unit.get("naid") or ""),
+                "current_filename": obj.get("filename"),
+                "status": status,
+                "bytes_downloaded": total_bytes_running,
+            })
+        except Exception:  # noqa: BLE001 — callback must never break the run
+            log.exception("progress_callback raised; continuing")
+
+    def _check_cancel() -> None:
+        if cancel_event is not None and cancel_event.is_set():
+            raise JobCancelled("download cancelled by user")
+
+    pbar_files = tqdm(total=total_objects, desc="files", unit="file",
+                      disable=not show_progress_bars)
+    pbar_bytes = tqdm(total=_known_bytes(units), desc="bytes", unit="B",
+                      unit_scale=True, disable=not show_progress_bars)
+    with pbar_files, pbar_bytes:
         for unit in units:
+            _check_cancel()
             naid = str(unit.get("naid") or "").strip()
             if not naid:
                 log.warning("skipping unit with empty NAID")
@@ -86,6 +130,7 @@ def download_all(
             unit_state = state.setdefault(naid, {})
 
             for obj in unit.get("digital_objects", []):
+                _check_cancel()
                 filename = obj["filename"]
                 url = obj["url"]
                 expected = obj.get("size_bytes")
@@ -98,6 +143,7 @@ def download_all(
                     pbar_files.update(1)
                     if expected:
                         pbar_bytes.update(expected)
+                    _emit(unit, obj, "skipped", expected or 0)
                     continue
 
                 ok, bytes_written, reason = _download_one(client, url, dest)
@@ -106,6 +152,7 @@ def download_all(
                     counts["downloaded"] += 1
                     log.info("naid=%s downloaded %s (%d bytes)", naid, filename, bytes_written)
                     pbar_bytes.update(bytes_written)
+                    _emit(unit, obj, "downloaded", bytes_written)
                 else:
                     unit_state[filename] = "failed"
                     counts["failed"] += 1
@@ -117,6 +164,7 @@ def download_all(
                             dest.unlink()
                         except OSError:
                             pass
+                    _emit(unit, obj, "failed", 0)
 
                 _write_state(paths.state, state)
                 pbar_files.update(1)

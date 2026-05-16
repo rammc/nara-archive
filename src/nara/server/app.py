@@ -1,6 +1,7 @@
 """FastAPI app factory for the nara web UI."""
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
@@ -9,7 +10,9 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from ..config import Config, resolve_config
+from ..jobs import JobManager
 from .. import __version__
+from .routes.jobs import router as jobs_router
 from .routes.search import router as search_router
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -18,12 +21,24 @@ STATIC_DIR = Path(__file__).parent / "static"
 def create_app(config: Config | None = None) -> FastAPI:
     """Build the FastAPI application. ``config`` is injectable for tests."""
     cfg = config or resolve_config()
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        manager = JobManager(config=cfg)
+        await manager.startup()
+        app.state.jobs = manager
+        try:
+            yield
+        finally:
+            await manager.shutdown()
+
     app = FastAPI(
         title="nara-archive",
         version=__version__,
         docs_url=None,           # no /docs in the user-facing UI
         redoc_url=None,
         openapi_url=None,
+        lifespan=lifespan,
     )
 
     # Stash config on app state so route handlers can grab it without
@@ -34,6 +49,7 @@ def create_app(config: Config | None = None) -> FastAPI:
         app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
     app.include_router(search_router)
+    app.include_router(jobs_router)
 
     @app.get("/api/health", response_class=JSONResponse)
     def health() -> dict[str, Any]:

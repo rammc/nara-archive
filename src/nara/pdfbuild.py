@@ -3,15 +3,19 @@ from __future__ import annotations
 
 import shutil
 import tempfile
+import threading
 from pathlib import Path
-from typing import Literal
+from typing import Any, Callable, Literal
 
 import img2pdf
 import pypdf
 from PIL import Image
 from tqdm import tqdm
 
+from .downloader import JobCancelled
 from .utils import OutputPaths, get_logger
+
+ProgressCallback = Callable[[dict[str, Any]], None]
 
 SourceKind = Literal["image", "pdf", "skip"]
 
@@ -160,8 +164,16 @@ def build_pdfs(
     *,
     force: bool = False,
     metadata: dict | None = None,
+    progress_callback: ProgressCallback | None = None,
+    cancel_event: threading.Event | None = None,
+    show_progress_bars: bool = True,
 ) -> list[dict]:
-    """Build one PDF per File Unit. Returns per-unit result rows for the manifest."""
+    """Build one PDF per File Unit. Returns per-unit result rows for the manifest.
+
+    Cancel/progress hooks mirror :func:`download_all`. Cancellation is checked
+    *between* File Units — a unit already mid-build runs to completion to keep
+    the on-disk state clean.
+    """
     import json
 
     log = get_logger()
@@ -171,8 +183,27 @@ def build_pdfs(
 
     units = metadata.get("file_units", [])
     results: list[dict] = []
+    total = len(units)
 
-    for seq, unit in enumerate(tqdm(units, desc="pdfs", unit="unit"), start=1):
+    def _emit(seq: int, naid: str, status: str, page_count: int = 0) -> None:
+        if progress_callback is None:
+            return
+        try:
+            progress_callback({
+                "phase": "building_pdfs",
+                "current": seq,
+                "total": total,
+                "current_naid": naid,
+                "status": status,
+                "page_count": page_count,
+            })
+        except Exception:  # noqa: BLE001
+            log.exception("progress_callback raised; continuing")
+
+    iterable = tqdm(units, desc="pdfs", unit="unit", disable=not show_progress_bars)
+    for seq, unit in enumerate(iterable, start=1):
+        if cancel_event is not None and cancel_event.is_set():
+            raise JobCancelled("build-pdfs cancelled by user")
         naid = str(unit.get("naid") or "").strip()
         slug = unit.get("slug") or "untitled"
         if not naid:
@@ -187,6 +218,7 @@ def build_pdfs(
                                        reason="no files on disk"))
             log.error("naid=%s no source files on disk — failed", naid)
             _append_build_error(paths, naid, "no files on disk")
+            _emit(seq, naid, "failed")
             continue
 
         # Classify everything once to decide doc vs non-doc.
@@ -197,6 +229,7 @@ def build_pdfs(
                                        pdf_path=None, pdf_size=0, page_count=0))
             log.info("naid=%s skipped_non_document (all %d sources non-doc)",
                      naid, len(ordered))
+            _emit(seq, naid, "skipped_non_document")
             continue
 
         out_path = paths.pdfs_dir / f"{seq:04d}-{naid}_{slug}.pdf"
@@ -206,6 +239,7 @@ def build_pdfs(
                                        pdf_path=out_path, pdf_size=out_path.stat().st_size,
                                        page_count=page_count))
             log.info("naid=%s skip rebuild (exists, %d pages)", naid, page_count)
+            _emit(seq, naid, "ok", page_count)
             continue
 
         with tempfile.TemporaryDirectory(prefix=f"nara-{naid}-") as work:
@@ -223,6 +257,7 @@ def build_pdfs(
                 results.append(_result_row(unit, seq, status="failed",
                                            pdf_path=None, pdf_size=0, page_count=0,
                                            reason=str(e)))
+                _emit(seq, naid, "failed")
                 continue
 
         size = out_path.stat().st_size
@@ -230,6 +265,7 @@ def build_pdfs(
                                    pdf_path=out_path, pdf_size=size, page_count=page_count))
         log.info("naid=%s built %s pages=%d size=%d",
                  naid, out_path.name, page_count, size)
+        _emit(seq, naid, "ok", page_count)
 
     return results
 
