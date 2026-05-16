@@ -12,7 +12,9 @@ from fastapi.staticfiles import StaticFiles
 from ..config import Config, resolve_config
 from ..jobs import JobManager
 from .. import __version__
+from .routes.config import router as config_router
 from .routes.jobs import router as jobs_router
+from .routes.library import router as library_router
 from .routes.search import router as search_router
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -48,8 +50,17 @@ def create_app(config: Config | None = None) -> FastAPI:
     if STATIC_DIR.exists():
         app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+    # PDFs are served from the user's output dir. StaticFiles handles HTTP
+    # Range requests natively (PDF viewers fetch pages on demand) and uses
+    # ``os.path.commonpath`` to block path traversal beneath ``directory``.
+    pdfs_dir = cfg.output_dir / "pdfs"
+    pdfs_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/pdfs", StaticFiles(directory=str(pdfs_dir)), name="pdfs")
+
     app.include_router(search_router)
     app.include_router(jobs_router)
+    app.include_router(library_router)
+    app.include_router(config_router)
 
     @app.get("/api/health", response_class=JSONResponse)
     def health() -> dict[str, Any]:

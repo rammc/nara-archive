@@ -82,3 +82,73 @@ class JobDto(BaseModel):
 
 class JobListResponse(BaseModel):
     jobs: list[JobDto]
+
+
+# --- Library ---
+
+class LibraryEntry(BaseModel):
+    name: str
+    parent_naid: str | None = None
+    parent_title: str | None = None
+    file_unit_count: int = 0
+    pdf_count: int = 0
+    total_size_bytes: int = 0
+    generated_at: str | None = None
+
+
+class LibraryListResponse(BaseModel):
+    manifests: list[LibraryEntry]
+
+
+class LibraryFileUnit(BaseModel):
+    naid: str | None = None
+    title: str | None = None
+    slug: str | None = None
+    scope_and_content_note: str | None = None
+    inclusive_start_year: int | None = None
+    inclusive_end_year: int | None = None
+    pdf_path: str | None = None
+    pdf_size_bytes: int = 0
+    page_count: int = 0
+    source_object_count: int = 0
+    status: str = "ok"
+
+
+class LibraryDetail(BaseModel):
+    name: str
+    schema_version: str | None = None
+    source: dict[str, Any] = Field(default_factory=dict)
+    stats: dict[str, Any] = Field(default_factory=dict)
+    file_units: list[LibraryFileUnit]
+
+
+class LibrarySearchResponse(BaseModel):
+    name: str
+    query: str
+    total: int
+    matches: list[LibraryFileUnit]
+
+
+# --- Config ---
+
+class ConfigDto(BaseModel):
+    has_api_key: bool
+    api_key_masked: str | None = None
+    api_base_url: str
+    default_rate: float
+    output_dir: str
+    server_host: str
+    server_port: int
+    auto_open_browser: bool
+    terms_acknowledged: bool
+    acknowledged_at: str | None = None
+    config_path: str | None = None
+
+
+class ConfigPatch(BaseModel):
+    default_rate: float | None = Field(default=None, gt=0, le=60)
+    auto_open_browser: bool | None = None
+
+
+class RevealResponse(BaseModel):
+    opened: str

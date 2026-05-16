@@ -164,3 +164,26 @@ def manifest_path_for(metadata_path: Path) -> Path:
     if name.startswith("metadata-") and name.endswith(".json"):
         return metadata_path.with_name("manifest-" + name[len("metadata-"):])
     return metadata_path.with_name(f"manifest-{metadata_path.stem}.json")
+
+
+def manifest_name_from_path(path: Path) -> str:
+    """Inverse: extract the subset name from a manifest filename.
+
+    ``manifest.json`` → ``"default"``
+    ``manifest-igfarben.json`` → ``"igfarben"``
+    Anything else → ``path.stem`` (best-effort).
+    """
+    name = path.name
+    if name == "manifest.json":
+        return "default"
+    if name.startswith("manifest-") and name.endswith(".json"):
+        return name[len("manifest-"):-len(".json")]
+    return path.stem
+
+
+def manifest_path_for_name(output_dir: Path, name: str) -> Path:
+    """Resolve a manifest filename from its slug name."""
+    if name == "default":
+        return output_dir / "manifest.json"
+    validate_filter_name(name)  # reject path-traversal attempts in URL slugs
+    return output_dir / f"manifest-{name}.json"

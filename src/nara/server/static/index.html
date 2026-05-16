@@ -103,7 +103,31 @@
     </section>
     <section id="library" class="tab-panel" hidden>
       <h1>Library</h1>
-      <p class="muted">Browse local manifests and read assembled PDFs side-by-side. Coming in the next patch.</p>
+      <p class="muted">Local manifests and the PDFs assembled from them.</p>
+
+      <div id="library-list-view">
+        <div id="library-empty" class="muted">No manifests yet. Run a download job first.</div>
+        <ul id="library-cards" class="card-list"></ul>
+      </div>
+
+      <div id="library-detail-view" hidden>
+        <button id="library-back" type="button">← back to library</button>
+        <header class="library-detail-head">
+          <h2 id="library-title">…</h2>
+          <p id="library-sub" class="muted"></p>
+        </header>
+        <input id="library-search" type="search" placeholder="search titles and notes" aria-label="search">
+        <div class="library-layout">
+          <ul id="library-units" class="unit-list"></ul>
+          <aside id="pdf-panel" class="pdf-panel" hidden>
+            <header>
+              <span id="pdf-panel-title">…</span>
+              <button id="pdf-panel-close" type="button" aria-label="Close">×</button>
+            </header>
+            <iframe id="pdf-frame" title="PDF preview" src="about:blank"></iframe>
+          </aside>
+        </div>
+      </div>
     </section>
     <section id="settings" class="tab-panel" hidden>
       <h1>Settings</h1>
@@ -111,10 +135,33 @@
         <dt>Server</dt><dd id="kv-server">…</dd>
         <dt>Version</dt><dd id="kv-version">…</dd>
         <dt>API key</dt><dd id="kv-apikey">…</dd>
+        <dt>API base URL</dt><dd id="kv-apibase">…</dd>
         <dt>Output dir</dt><dd id="kv-output">…</dd>
+        <dt>Config file</dt><dd id="kv-configpath">…</dd>
         <dt>Terms acknowledged</dt><dd id="kv-terms">…</dd>
       </dl>
-      <p class="muted">Editable settings come with the Settings-tab patch.</p>
+
+      <form id="settings-form" class="settings-form" autocomplete="off">
+        <h3>Editable</h3>
+        <div class="field">
+          <label for="set-rate">Default rate (seconds between requests)</label>
+          <input id="set-rate" type="number" min="0.1" max="60" step="0.1">
+        </div>
+        <div class="field">
+          <label><input id="set-autobrowser" type="checkbox"> Auto-open browser on `nara serve`</label>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn-primary">Save</button>
+          <button type="button" id="settings-reveal">Open ~/.nara folder</button>
+        </div>
+        <p id="settings-msg" class="muted"></p>
+      </form>
+
+      <h3>NARA terms of use</h3>
+      <p class="muted">
+        This project uses the National Archives Catalog API but is not endorsed by NARA.
+        Default rate-limiting honours their request to stay polite (10k requests/key/month).
+      </p>
     </section>
   </main>
 
@@ -129,5 +176,7 @@
   <script src="/static/app.js" defer></script>
   <script src="/static/discovery.js" defer></script>
   <script src="/static/downloads.js" defer></script>
+  <script src="/static/library.js" defer></script>
+  <script src="/static/settings.js" defer></script>
 </body>
 </html>
