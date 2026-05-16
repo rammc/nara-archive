@@ -1,0 +1,116 @@
+{
+  "body": {
+    "hits": {
+      "total": { "value": 4 },
+      "hits": [
+        {
+          "_source": {
+            "record": {
+              "naId": "10000001",
+              "title": "Letter from General Smith, June 1944",
+              "levelOfDescription": "fileUnit",
+              "scopeAndContentNote": "Handwritten letter, three pages.",
+              "inclusiveStartDate": { "year": 1944, "month": 6, "day": 1 },
+              "inclusiveEndDate":   { "year": 1944, "month": 6, "day": 1 },
+              "digitalObjects": [
+                {
+                  "objectFilename": "page-001.jpg",
+                  "objectUrl": "https://example.test/10000001/page-001.jpg",
+                  "objectType": "Image (JPG)",
+                  "objectFileSize": 11111,
+                  "sortNumber": 1
+                },
+                {
+                  "objectFilename": "page-002.jpg",
+                  "objectUrl": "https://example.test/10000001/page-002.jpg",
+                  "objectType": "Image (JPG)",
+                  "objectFileSize": 22222,
+                  "sortNumber": 2
+                },
+                {
+                  "objectFilename": "page-003.jpg",
+                  "objectUrl": "https://example.test/10000001/page-003.jpg",
+                  "objectType": "Image (JPG)",
+                  "objectFileSize": 33333,
+                  "sortNumber": 3
+                }
+              ]
+            }
+          }
+        },
+        {
+          "_source": {
+            "record": {
+              "naId": "10000002",
+              "title": "Mixed Report and Annex, 1945",
+              "levelOfDescription": "fileUnit",
+              "digitalObjects": [
+                {
+                  "objectFilename": "report.pdf",
+                  "objectUrl": "https://example.test/10000002/report.pdf",
+                  "objectType": "Portable Document Format (PDF)",
+                  "objectFileSize": 50000,
+                  "sortNumber": 1
+                },
+                {
+                  "objectFilename": "annex-a.jpg",
+                  "objectUrl": "https://example.test/10000002/annex-a.jpg",
+                  "objectType": "Image (JPG)",
+                  "objectFileSize": 12345,
+                  "sortNumber": 2
+                },
+                {
+                  "objectFilename": "annex-b.jpg",
+                  "objectUrl": "https://example.test/10000002/annex-b.jpg",
+                  "objectType": "Image (JPG)",
+                  "objectFileSize": 23456
+                }
+              ]
+            }
+          }
+        },
+        {
+          "_source": {
+            "record": {
+              "naId": "10000003",
+              "title": "Press Conference Recording",
+              "levelOfDescription": "fileUnit",
+              "scopeAndContentNote": "Audio only.",
+              "inclusiveStartDate": { "year": 1946 },
+              "digitalObjects": [
+                {
+                  "objectFilename": "audio-001.mp3",
+                  "objectUrl": "https://example.test/10000003/audio-001.mp3",
+                  "objectType": "Audio (MP3)",
+                  "objectFileSize": 999999,
+                  "sortNumber": 1
+                }
+              ]
+            }
+          }
+        },
+        {
+          "_source": {
+            "record": {
+              "naId": "10000004",
+              "title": "I.G. Farben Postwar Investigation File, 1946",
+              "levelOfDescription": "fileUnit",
+              "scopeAndContentNote": "Field notes on dye works in Frankfurt.",
+              "inclusiveStartDate": { "year": 1946 },
+              "inclusiveEndDate":   { "year": 1947 },
+              "digitalObjects": [
+                {
+                  "objectFilename": "page-001.jpg",
+                  "objectUrl": "https://example.test/10000004/page-001.jpg",
+                  "objectType": "Image (JPG)",
+                  "objectFileSize": 44444,
+                  "sortNumber": 1
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
