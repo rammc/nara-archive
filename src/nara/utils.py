@@ -127,6 +127,17 @@ def atomic_write_text(path: Path, content: str) -> None:
     tmp.replace(path)
 
 
+def safe_get(d, *path, default=None):
+    """Walk a nested dict/list path, returning ``default`` on any miss."""
+    cur = d
+    for key in path:
+        if isinstance(cur, dict) and key in cur:
+            cur = cur[key]
+        else:
+            return default
+    return cur
+
+
 _FILTER_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 
 

@@ -120,3 +120,185 @@ body {
   background: var(--bg-2);
 }
 .footer a { color: inherit; }
+
+/* --- Discovery tab --- */
+
+.search-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0 1.5rem;
+}
+.search-bar input[type="search"] {
+  flex: 1;
+  background: var(--bg-2);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+}
+.search-bar input[type="search"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+button, .btn-primary {
+  font: inherit;
+  background: var(--bg-2);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.55rem 0.95rem;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.btn-primary:hover { filter: brightness(1.08); }
+
+.search-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1.5rem;
+}
+@media (max-width: 800px) {
+  .search-layout { grid-template-columns: 1fr; }
+}
+
+.filters fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.85rem;
+  margin: 0 0 1rem 0;
+}
+.filters legend {
+  font-size: 0.85rem;
+  color: var(--fg-dim);
+  padding: 0 0.3rem;
+}
+.filters label {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin: 0.25rem 0;
+  font-size: 0.92rem;
+  color: var(--fg);
+}
+.year-range {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+.year-range input {
+  width: 5.5rem;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+}
+
+#search-status { margin: 0 0 0.75rem 0; }
+.error { color: #e15a5a; }
+
+.card-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.card {
+  display: flex;
+  gap: 1rem;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.9rem;
+}
+.card .thumb {
+  width: 90px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--bg);
+  flex-shrink: 0;
+}
+.thumb-empty {
+  display: grid;
+  place-items: center;
+  color: var(--fg-dim);
+  font-size: 1.6rem;
+  border: 1px dashed var(--border);
+}
+.card-body { flex: 1; min-width: 0; }
+.card h3 {
+  margin: 0 0 0.35rem 0;
+  font-size: 1.05rem;
+  letter-spacing: -0.005em;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--fg-dim);
+  margin-bottom: 0.4rem;
+}
+.badge {
+  display: inline-block;
+  border: 1px solid var(--border);
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+.card-actions { margin-top: 0.4rem; display: flex; gap: 0.4rem; }
+.card-actions button { font-size: 0.85rem; padding: 0.35rem 0.7rem; }
+
+.pager {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0;
+}
+.pager span { color: var(--fg-dim); font-size: 0.9rem; }
+
+.record-modal {
+  background: var(--bg-2);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  max-width: min(720px, 90vw);
+  max-height: 80vh;
+  overflow: auto;
+}
+.record-modal::backdrop { background: rgba(0,0,0,0.6); }
+.modal-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  color: var(--fg-dim);
+  cursor: pointer;
+}
+.modal-close:hover { color: var(--fg); }
+.obj-list { list-style: none; padding: 0; margin: 0.3rem 0; }
+.obj-list li {
+  display: flex; gap: 0.5rem; align-items: baseline;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.meta-row { display: flex; gap: 0.6rem; align-items: center; margin: 0.3rem 0 1rem; }

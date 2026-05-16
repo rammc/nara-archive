@@ -23,7 +23,52 @@
   <main class="content">
     <section id="discovery" class="tab-panel" hidden>
       <h1>Discovery</h1>
-      <p class="muted">Live NARA Catalog search. Coming in the next patch — the API surface and tabs are in place.</p>
+      <p class="muted">Live NARA Catalog search.</p>
+
+      <form id="search-form" class="search-bar" autocomplete="off">
+        <input id="search-q" type="search" placeholder='e.g. "I.G. Farben"' aria-label="Search NARA Catalog">
+        <button type="submit" class="btn-primary">Search</button>
+      </form>
+
+      <div class="search-layout">
+        <aside class="filters">
+          <fieldset>
+            <legend>Level of description</legend>
+            <label><input type="checkbox" name="level" value="recordGroup"> Record Group</label>
+            <label><input type="checkbox" name="level" value="collection"> Collection</label>
+            <label><input type="checkbox" name="level" value="series"> Series</label>
+            <label><input type="checkbox" name="level" value="fileUnit"> File Unit</label>
+            <label><input type="checkbox" name="level" value="item"> Item</label>
+          </fieldset>
+          <fieldset>
+            <legend>Year range</legend>
+            <div class="year-range">
+              <input id="year-from" type="number" placeholder="from" min="0" max="9999">
+              <span>–</span>
+              <input id="year-to" type="number" placeholder="to" min="0" max="9999">
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Other</legend>
+            <label><input id="has-digital" type="checkbox"> Has digital objects</label>
+          </fieldset>
+        </aside>
+
+        <div class="results">
+          <div id="search-status" class="muted">Type a query to begin.</div>
+          <ul id="search-results" class="card-list" aria-live="polite"></ul>
+          <nav class="pager" id="search-pager" hidden>
+            <button id="pager-prev" type="button">← prev</button>
+            <span id="pager-info">page 1</span>
+            <button id="pager-next" type="button">next →</button>
+          </nav>
+        </div>
+      </div>
+
+      <dialog id="record-modal" class="record-modal">
+        <button class="modal-close" type="button" aria-label="Close" data-dismiss>×</button>
+        <div id="modal-body">loading…</div>
+      </dialog>
     </section>
     <section id="downloads" class="tab-panel" hidden>
       <h1>Downloads</h1>
@@ -55,5 +100,6 @@
   </footer>
 
   <script src="/static/app.js" defer></script>
+  <script src="/static/discovery.js" defer></script>
 </body>
 </html>

@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from ..config import Config, resolve_config
 from .. import __version__
+from .routes.search import router as search_router
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -31,6 +32,8 @@ def create_app(config: Config | None = None) -> FastAPI:
 
     if STATIC_DIR.exists():
         app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+    app.include_router(search_router)
 
     @app.get("/api/health", response_class=JSONResponse)
     def health() -> dict[str, Any]:

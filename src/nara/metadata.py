@@ -6,20 +6,9 @@ from collections import Counter
 from typing import Any
 
 from .api import API_BASE, NaraApiError, NaraClient
-from .utils import OutputPaths, atomic_write_text, get_logger, make_slug, utc_now_iso
+from .utils import OutputPaths, atomic_write_text, get_logger, make_slug, safe_get as _safe_get, utc_now_iso
 
 SCHEMA_VERSION = "1.0"
-
-
-def _safe_get(d: Any, *path: str, default: Any = None) -> Any:
-    """Walk a nested dict/list path, returning ``default`` on any miss."""
-    cur = d
-    for key in path:
-        if isinstance(cur, dict) and key in cur:
-            cur = cur[key]
-        else:
-            return default
-    return cur
 
 
 def _record_year(record: dict, which: str) -> int | None:

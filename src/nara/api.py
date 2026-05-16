@@ -111,6 +111,21 @@ class NaraClient:
                 f"of {parent_naid}: {e}"
             ) from e
 
+    def search(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Generic ``/records/search`` proxy. Caller supplies all query params."""
+        url = f"{self._base}records/search"
+        try:
+            return self._get_json(url, params=params)
+        except NaraUpstreamDown as e:
+            raise NaraApiError(
+                f"NARA API is currently unreachable for /records/search: {e}"
+            ) from e
+        except RetryError as e:
+            raise NaraApiError(f"Exhausted retries on /records/search: {e}") from e
+        except requests.exceptions.HTTPError as e:
+            status = e.response.status_code if e.response is not None else "?"
+            raise NaraApiError(f"HTTP {status} on /records/search: {e}") from e
+
     def get_record(self, naid: str) -> dict[str, Any] | None:
         """Return raw JSON for a single record, or ``None`` if not findable.
 
