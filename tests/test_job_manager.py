@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import threading
 import time
 from pathlib import Path
 
@@ -371,6 +372,74 @@ async def _assert_restored_as_interrupted(cfg, job_id):
         assert job is not None
         assert job.status == "interrupted"
         assert job.completed_at is not None
+    finally:
+        await mgr.shutdown()
+
+
+# ---------- remove + restart ----------
+
+def test_remove_purges_terminal_job(tmp_path):
+    asyncio.run(_test_remove_terminal(tmp_path))
+
+
+async def _test_remove_terminal(tmp_path):
+    mgr = JobManager(config=_config(tmp_path), runners=_fake_runners())
+    await mgr.startup()
+    try:
+        job = await mgr.create(parent_naid="P")
+        await _wait_for(lambda: mgr.get(job.job_id).status == "done")
+        assert await mgr.remove(job.job_id) is True
+        assert mgr.get(job.job_id) is None
+    finally:
+        await mgr.shutdown()
+
+
+def test_remove_refuses_active_job(tmp_path):
+    asyncio.run(_test_remove_active(tmp_path))
+
+
+async def _test_remove_active(tmp_path):
+    block = threading.Event()
+
+    def slow_download(paths, *, rate, client, metadata, progress_callback=None,
+                      cancel_event=None, show_progress_bars=False):
+        while not block.is_set() and not (cancel_event and cancel_event.is_set()):
+            time.sleep(0.005)
+        return {"downloaded": 0, "skipped": 0, "failed": 0}
+
+    runners = _fake_runners()
+    runners["download_all"] = slow_download
+
+    mgr = JobManager(config=_config(tmp_path), runners=runners)
+    await mgr.startup()
+    try:
+        job = await mgr.create(parent_naid="P")
+        await _wait_for(lambda: mgr.get(job.job_id).status == "downloading")
+        with pytest.raises(RuntimeError, match="active job"):
+            await mgr.remove(job.job_id)
+    finally:
+        block.set()
+        await mgr.shutdown()
+
+
+def test_restart_clones_params_into_new_job(tmp_path):
+    asyncio.run(_test_restart(tmp_path))
+
+
+async def _test_restart(tmp_path):
+    mgr = JobManager(config=_config(tmp_path), runners=_fake_runners())
+    await mgr.startup()
+    try:
+        original = await mgr.create(parent_naid="P", name="x", filter_query="re", rate=0.75)
+        await _wait_for(lambda: mgr.get(original.job_id).status == "done")
+        new = await mgr.restart(original.job_id)
+        assert new.job_id != original.job_id
+        assert new.parent_naid == original.parent_naid
+        assert new.name == original.name
+        assert new.filter_query == original.filter_query
+        assert new.rate == original.rate
+        # Original survives in history.
+        assert mgr.get(original.job_id) is not None
     finally:
         await mgr.shutdown()
 

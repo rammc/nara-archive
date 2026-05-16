@@ -69,10 +69,37 @@
         <button class="modal-close" type="button" aria-label="Close" data-dismiss>×</button>
         <div id="modal-body">loading…</div>
       </dialog>
+
+      <dialog id="job-dialog" class="job-dialog">
+        <form id="job-form" method="dialog">
+          <h2>Start a bulk download</h2>
+          <p class="muted" id="job-dialog-sub"></p>
+          <div class="field">
+            <label for="job-name">Name (used for filenames)</label>
+            <input id="job-name" type="text" required minlength="1"
+                   pattern="[A-Za-z0-9][A-Za-z0-9_-]*"
+                   title="letters, digits, dash, underscore — no spaces or slashes">
+          </div>
+          <div class="field">
+            <label for="job-filter">Filter regex (optional, applied after metadata fetch)</label>
+            <input id="job-filter" type="text" placeholder='e.g. I\.?G\.?\s*Farben'>
+          </div>
+          <div class="field">
+            <label for="job-rate">Rate (seconds between requests)</label>
+            <input id="job-rate" type="number" min="0.1" max="60" step="0.1" value="0.5">
+          </div>
+          <div class="actions">
+            <button type="button" data-dismiss>Cancel</button>
+            <button type="submit" class="btn-primary">Start job</button>
+          </div>
+        </form>
+      </dialog>
     </section>
     <section id="downloads" class="tab-panel" hidden>
       <h1>Downloads</h1>
-      <p class="muted">In-flight bulk jobs with cancel / restart. Coming in the next patch.</p>
+      <p class="muted">Bulk-download jobs. Polling pauses when this tab is in the background.</p>
+      <div id="jobs-empty" class="muted">No jobs yet. Start one from Discovery.</div>
+      <ul id="jobs-list" class="job-list" aria-live="polite"></ul>
     </section>
     <section id="library" class="tab-panel" hidden>
       <h1>Library</h1>
@@ -101,5 +128,6 @@
 
   <script src="/static/app.js" defer></script>
   <script src="/static/discovery.js" defer></script>
+  <script src="/static/downloads.js" defer></script>
 </body>
 </html>

@@ -96,7 +96,7 @@
         ${note}
         <div class="card-actions">
           <button type="button" data-action="view" data-naid="${escapeHtml(h.naid)}">View</button>
-          <button type="button" data-action="download" data-naid="${escapeHtml(h.naid)}" disabled title="Jobs UI ships in the next patch">Download</button>
+          <button type="button" data-action="download" data-naid="${escapeHtml(h.naid)}" data-title="${escapeHtml(h.title || "")}">Download</button>
         </div>
       </div>
     `;
@@ -213,13 +213,75 @@
     const naid = t.dataset.naid;
     if (!action || !naid) return;
     if (action === "view") openDetail(naid);
-    // download triggers POST /api/jobs in the next patch
+    if (action === "download") openJobDialog(naid, t.dataset.title || "");
   });
 
   modal.addEventListener("click", (e) => {
     const t = e.target;
     if (t instanceof HTMLElement && (t === modal || t.dataset.dismiss !== undefined)) {
       modal.close();
+    }
+  });
+
+  // --- job creation dialog ---
+
+  const jobDialog = $("#job-dialog");
+  const jobForm = $("#job-form");
+  const jobNameInput = $("#job-name");
+  const jobFilterInput = $("#job-filter");
+  const jobRateInput = $("#job-rate");
+  const jobSub = $("#job-dialog-sub");
+
+  function slugifyClient(s) {
+    return (s || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 30) || "job";
+  }
+
+  let pendingNaid = null;
+  function openJobDialog(naid, title) {
+    pendingNaid = naid;
+    jobNameInput.value = slugifyClient(title) || `naid-${naid}`;
+    jobFilterInput.value = "";
+    jobRateInput.value = "0.5";
+    jobSub.textContent = `Parent NAID ${naid}${title ? ` · ${title.slice(0, 80)}` : ""}`;
+    jobDialog.showModal();
+  }
+
+  jobDialog.addEventListener("click", (e) => {
+    const t = e.target;
+    if (t instanceof HTMLElement && t.dataset.dismiss !== undefined) {
+      jobDialog.close();
+    }
+  });
+
+  jobForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!pendingNaid) return;
+    const body = {
+      parent_naid: pendingNaid,
+      name: jobNameInput.value.trim(),
+      filter_query: jobFilterInput.value.trim() || null,
+      rate: parseFloat(jobRateInput.value) || 0.5,
+    };
+    try {
+      const r = await fetch("/api/jobs", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({ detail: r.statusText }));
+        throw new Error(err.detail || `HTTP ${r.status}`);
+      }
+      jobDialog.close();
+      // Switch to Downloads tab; downloads.js polls automatically.
+      location.hash = "#downloads";
+      if (window.__naraDownloads) window.__naraDownloads.refresh();
+    } catch (err) {
+      alert(`Could not create job: ${err.message}`);
     }
   });
 })();

@@ -207,6 +207,32 @@ class JobManager:
         await self._queue.put(job.job_id)
         return job
 
+    async def remove(self, job_id: str) -> bool:
+        """Purge a terminal job from history. Raises if the job is still active."""
+        job = self._jobs.get(job_id)
+        if job is None:
+            return False
+        if job.status not in TERMINAL_STATES:
+            raise RuntimeError(
+                f"cannot remove an active job (job_id={job_id}, status={job.status}) "
+                "— cancel it first"
+            )
+        del self._jobs[job_id]
+        self._persist()
+        return True
+
+    async def restart(self, job_id: str) -> Job:
+        """Create a brand-new job re-using the original params. Old job stays in history."""
+        job = self._jobs.get(job_id)
+        if job is None:
+            raise KeyError(job_id)
+        return await self.create(
+            parent_naid=job.parent_naid,
+            name=job.name,
+            filter_query=job.filter_query,
+            rate=job.rate,
+        )
+
     async def cancel(self, job_id: str) -> Job:
         job = self._jobs.get(job_id)
         if job is None:

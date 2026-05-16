@@ -1,11 +1,11 @@
-"""Routes for the JobManager: create / list / get / cancel."""
+"""Routes for the JobManager: create / list / get / cancel / restart."""
 from __future__ import annotations
 
 from dataclasses import asdict
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Response
 
-from ...jobs import JobManager
+from ...jobs import TERMINAL_STATES, JobManager
 from ..models import JobCreate, JobDto, JobListResponse
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
@@ -52,11 +52,30 @@ async def get_job(job_id: str, request: Request) -> JobDto:
     return _to_dto(job)
 
 
-@router.delete("/{job_id}", response_model=JobDto)
-async def cancel_job(job_id: str, request: Request) -> JobDto:
+@router.delete("/{job_id}")
+async def delete_job(job_id: str, request: Request):
+    """Smart DELETE: active jobs are cancelled (200 + DTO); terminal jobs
+    are purged from history (204 No Content)."""
     mgr = _manager(request)
+    job = mgr.get(job_id)
+    if job is None:
+        raise HTTPException(404, f"job {job_id} not found")
+    if job.status in TERMINAL_STATES:
+        await mgr.remove(job_id)
+        return Response(status_code=204)
     try:
-        job = await mgr.cancel(job_id)
+        cancelled = await mgr.cancel(job_id)
     except KeyError as e:
         raise HTTPException(404, f"job {job_id} not found") from e
-    return _to_dto(job)
+    return _to_dto(cancelled)
+
+
+@router.post("/{job_id}/restart", response_model=JobDto, status_code=201)
+async def restart_job(job_id: str, request: Request) -> JobDto:
+    """Queue a new job that reuses the original parameters."""
+    mgr = _manager(request)
+    try:
+        new = await mgr.restart(job_id)
+    except KeyError as e:
+        raise HTTPException(404, f"job {job_id} not found") from e
+    return _to_dto(new)

@@ -302,3 +302,115 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   border-bottom: 1px solid var(--border);
 }
 .meta-row { display: flex; gap: 0.6rem; align-items: center; margin: 0.3rem 0 1rem; }
+
+/* --- Downloads tab --- */
+
+.job-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.job-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.job-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+}
+.job-head:hover { color: var(--accent); }
+.job-id-block { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.job-name { font-weight: 600; }
+.job-sub { font-size: 0.85rem; }
+
+.status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.status-ok        { color: #6fbf73; }
+.status-err       { color: #e85a5a; }
+.status-cancelled { color: #b0a98c; }
+.status-queued    { color: var(--fg-dim); }
+.status-running   { color: var(--accent); }
+
+.job-progress { display: flex; flex-direction: column; gap: 0.3rem; }
+.job-progress .bar {
+  --pct: 0%;
+  height: 6px;
+  background: var(--bg);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+.job-progress .bar span {
+  display: block;
+  width: var(--pct);
+  height: 100%;
+  background: var(--accent);
+  transition: width 200ms linear;
+}
+.job-progress .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  font-size: 0.85rem;
+  color: var(--fg-dim);
+}
+
+.job-details {
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+}
+.job-details .kv { font-size: 0.88rem; }
+.job-errors { margin-top: 0.6rem; }
+.job-errors ul { margin: 0.3rem 0 0 1.2rem; padding: 0; }
+
+.job-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.job-actions button { font-size: 0.85rem; padding: 0.32rem 0.7rem; }
+
+/* --- Job creation dialog (lives in discovery.js) --- */
+
+.job-dialog {
+  background: var(--bg-2);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  min-width: min(420px, 90vw);
+}
+.job-dialog::backdrop { background: rgba(0,0,0,0.6); }
+.job-dialog h2 { margin: 0 0 0.5rem; }
+.job-dialog .field { display: flex; flex-direction: column; gap: 0.25rem; margin: 0.6rem 0; }
+.job-dialog .field label { font-size: 0.85rem; color: var(--fg-dim); }
+.job-dialog input[type="text"],
+.job-dialog input[type="number"] {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+}
+.job-dialog .actions { display: flex; gap: 0.4rem; justify-content: flex-end; margin-top: 0.8rem; }
