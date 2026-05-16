@@ -1,4 +1,5 @@
 """FastAPI app factory for the nara web UI."""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
@@ -37,7 +38,7 @@ def create_app(config: Config | None = None) -> FastAPI:
     app = FastAPI(
         title="nara-archive",
         version=__version__,
-        docs_url=None,           # no /docs in the user-facing UI
+        docs_url=None,  # no /docs in the user-facing UI
         redoc_url=None,
         openapi_url=None,
         lifespan=lifespan,

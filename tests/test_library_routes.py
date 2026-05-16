@@ -1,4 +1,5 @@
 """Tests for /api/library and the /pdfs/* static mount."""
+
 from __future__ import annotations
 
 import json
@@ -26,20 +27,37 @@ def _config(tmp_path: Path) -> Config:
     )
 
 
-def _write_manifest(out: Path, name: str, *,
-                    units: list[dict] | None = None,
-                    parent_naid: str = "7840517",
-                    parent_title: str | None = "Series X") -> Path:
+def _write_manifest(
+    out: Path,
+    name: str,
+    *,
+    units: list[dict] | None = None,
+    parent_naid: str = "7840517",
+    parent_title: str | None = "Series X",
+) -> Path:
     out.mkdir(parents=True, exist_ok=True)
     filename = "manifest.json" if name == "default" else f"manifest-{name}.json"
     path = out / filename
     units = units or [
-        {"naid": "1001", "title": "Letter from Smith", "pdf_path": "pdfs/0001-1001_x.pdf",
-         "pdf_size_bytes": 100, "page_count": 2, "source_object_count": 2,
-         "status": "ok", "scope_and_content_note": "On dye works in Frankfurt."},
-        {"naid": "1002", "title": "Report 1945", "pdf_path": "pdfs/0002-1002_y.pdf",
-         "pdf_size_bytes": 250, "page_count": 5, "source_object_count": 5,
-         "status": "ok"},
+        {
+            "naid": "1001",
+            "title": "Letter from Smith",
+            "pdf_path": "pdfs/0001-1001_x.pdf",
+            "pdf_size_bytes": 100,
+            "page_count": 2,
+            "source_object_count": 2,
+            "status": "ok",
+            "scope_and_content_note": "On dye works in Frankfurt.",
+        },
+        {
+            "naid": "1002",
+            "title": "Report 1945",
+            "pdf_path": "pdfs/0002-1002_y.pdf",
+            "pdf_size_bytes": 250,
+            "page_count": 5,
+            "source_object_count": 5,
+            "status": "ok",
+        },
     ]
     doc = {
         "schema_version": "1.0",
@@ -63,13 +81,23 @@ def _write_manifest(out: Path, name: str, *,
 def app_with_data(tmp_path):
     out = tmp_path / "out"
     _write_manifest(out, "default")
-    _write_manifest(out, "igfarben",
-                    parent_naid="7840517",
-                    parent_title="Series X",
-                    units=[{"naid": "9", "title": "I.G. Farben file",
-                            "pdf_path": "pdfs/0001-9_igfarben.pdf",
-                            "pdf_size_bytes": 1, "page_count": 1,
-                            "source_object_count": 1, "status": "ok"}])
+    _write_manifest(
+        out,
+        "igfarben",
+        parent_naid="7840517",
+        parent_title="Series X",
+        units=[
+            {
+                "naid": "9",
+                "title": "I.G. Farben file",
+                "pdf_path": "pdfs/0001-9_igfarben.pdf",
+                "pdf_size_bytes": 1,
+                "page_count": 1,
+                "source_object_count": 1,
+                "status": "ok",
+            }
+        ],
+    )
     cfg = Config(**{**_config(out).__dict__})
     return create_app(cfg), out
 

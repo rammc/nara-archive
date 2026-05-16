@@ -1,4 +1,5 @@
 """Shared helpers: paths, slugging, logging."""
+
 from __future__ import annotations
 
 import logging
@@ -68,7 +69,9 @@ def make_slug(title: str | None) -> str:
     """Kebab-case slug bounded to ``SLUG_MAX_LEN``."""
     if not title:
         return "untitled"
-    return _slugify(title, max_length=SLUG_MAX_LEN, word_boundary=True, save_order=True) or "untitled"
+    return (
+        _slugify(title, max_length=SLUG_MAX_LEN, word_boundary=True, save_order=True) or "untitled"
+    )
 
 
 def utc_now_iso() -> str:
@@ -107,9 +110,7 @@ def setup_logging(run_log: Path, *, verbose: bool = False) -> logging.Logger:
         encoding="utf-8",
     )
     file.setLevel(level)
-    file.setFormatter(
-        logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
-    )
+    file.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
     logger.addHandler(file)
     logger.propagate = False
     return logger
@@ -162,7 +163,7 @@ def manifest_path_for(metadata_path: Path) -> Path:
     if name == "metadata.json":
         return metadata_path.with_name("manifest.json")
     if name.startswith("metadata-") and name.endswith(".json"):
-        return metadata_path.with_name("manifest-" + name[len("metadata-"):])
+        return metadata_path.with_name("manifest-" + name[len("metadata-") :])
     return metadata_path.with_name(f"manifest-{metadata_path.stem}.json")
 
 
@@ -177,7 +178,7 @@ def manifest_name_from_path(path: Path) -> str:
     if name == "manifest.json":
         return "default"
     if name.startswith("manifest-") and name.endswith(".json"):
-        return name[len("manifest-"):-len(".json")]
+        return name[len("manifest-") : -len(".json")]
     return path.stem
 
 

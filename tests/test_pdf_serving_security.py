@@ -1,4 +1,5 @@
 """Path-traversal protection and Range support for the /pdfs/* mount."""
+
 from __future__ import annotations
 
 from pathlib import Path

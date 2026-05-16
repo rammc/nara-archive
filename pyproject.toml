@@ -1,6 +1,6 @@
 [project]
 name = "nara-archive"  # TODO before PyPI publish: confirm availability; fallback `naracat`
-version = "0.2.0"
+version = "0.3.0"
 description = "Bulk-download NARA Catalog digital objects and assemble one PDF per File Unit; ships with a local web UI."
 readme = "README.md"
 requires-python = ">=3.11"

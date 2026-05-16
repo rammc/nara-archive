@@ -1,4 +1,5 @@
 """End-to-end tests that the CLI resolves --metadata-file correctly."""
+
 from __future__ import annotations
 
 import json
@@ -33,9 +34,7 @@ def _doc_from_fixture(extra_filter: dict | None = None) -> dict:
 def test_stats_default_reads_metadata_json(tmp_path):
     output_dir = tmp_path / "out"
     output_dir.mkdir()
-    (output_dir / "metadata.json").write_text(
-        json.dumps(_doc_from_fixture()), encoding="utf-8"
-    )
+    (output_dir / "metadata.json").write_text(json.dumps(_doc_from_fixture()), encoding="utf-8")
 
     runner = CliRunner()
     result = runner.invoke(app, ["stats", "--output-dir", str(output_dir)])
@@ -50,25 +49,36 @@ def test_stats_with_metadata_file_reads_alternative(tmp_path):
     output_dir.mkdir()
     # Write the full file too so the default would point somewhere valid;
     # we explicitly request the subset and expect the count to be 1.
-    (output_dir / "metadata.json").write_text(
-        json.dumps(_doc_from_fixture()), encoding="utf-8"
-    )
+    (output_dir / "metadata.json").write_text(json.dumps(_doc_from_fixture()), encoding="utf-8")
     subset_path = output_dir / "metadata-igfarben.json"
     subset_path.write_text(
-        json.dumps(_doc_from_fixture(extra_filter={
-            "name": "igfarben", "query": "farben", "fields": ["title"],
-            "source_file": "metadata.json", "matched_count": 1,
-            "total_source_count": 4, "applied_at": "2026-05-16T00:00:00Z",
-        })),
+        json.dumps(
+            _doc_from_fixture(
+                extra_filter={
+                    "name": "igfarben",
+                    "query": "farben",
+                    "fields": ["title"],
+                    "source_file": "metadata.json",
+                    "matched_count": 1,
+                    "total_source_count": 4,
+                    "applied_at": "2026-05-16T00:00:00Z",
+                }
+            )
+        ),
         encoding="utf-8",
     )
 
     runner = CliRunner()
-    result = runner.invoke(app, [
-        "stats",
-        "--metadata-file", str(subset_path),
-        "--output-dir", str(output_dir),
-    ])
+    result = runner.invoke(
+        app,
+        [
+            "stats",
+            "--metadata-file",
+            str(subset_path),
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
     assert result.exit_code == 0, result.output + (result.stderr or "")
     assert "metadata-igfarben.json present" in result.stderr
     assert "file_units=1" in result.stderr
@@ -77,17 +87,21 @@ def test_stats_with_metadata_file_reads_alternative(tmp_path):
 def test_filter_command_writes_subset(tmp_path):
     output_dir = tmp_path / "out"
     output_dir.mkdir()
-    (output_dir / "metadata.json").write_text(
-        json.dumps(_doc_from_fixture()), encoding="utf-8"
-    )
+    (output_dir / "metadata.json").write_text(json.dumps(_doc_from_fixture()), encoding="utf-8")
 
     runner = CliRunner()
-    result = runner.invoke(app, [
-        "filter",
-        "--query", r"I\.?G\.?\s*Farben",
-        "--name", "igfarben",
-        "--output-dir", str(output_dir),
-    ])
+    result = runner.invoke(
+        app,
+        [
+            "filter",
+            "--query",
+            r"I\.?G\.?\s*Farben",
+            "--name",
+            "igfarben",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
     assert result.exit_code == 0, result.output + (result.stderr or "")
     out_path = output_dir / "metadata-igfarben.json"
     assert out_path.exists()
@@ -100,33 +114,41 @@ def test_filter_command_writes_subset(tmp_path):
 def test_filter_command_zero_matches_exit_2(tmp_path):
     output_dir = tmp_path / "out"
     output_dir.mkdir()
-    (output_dir / "metadata.json").write_text(
-        json.dumps(_doc_from_fixture()), encoding="utf-8"
-    )
+    (output_dir / "metadata.json").write_text(json.dumps(_doc_from_fixture()), encoding="utf-8")
 
     runner = CliRunner()
-    result = runner.invoke(app, [
-        "filter",
-        "--query", "nope-no-match",
-        "--name", "nada",
-        "--output-dir", str(output_dir),
-    ])
+    result = runner.invoke(
+        app,
+        [
+            "filter",
+            "--query",
+            "nope-no-match",
+            "--name",
+            "nada",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
     assert result.exit_code == 2
 
 
 def test_filter_command_rejects_invalid_name(tmp_path):
     output_dir = tmp_path / "out"
     output_dir.mkdir()
-    (output_dir / "metadata.json").write_text(
-        json.dumps(_doc_from_fixture()), encoding="utf-8"
-    )
+    (output_dir / "metadata.json").write_text(json.dumps(_doc_from_fixture()), encoding="utf-8")
 
     runner = CliRunner()
-    result = runner.invoke(app, [
-        "filter",
-        "--query", "farben",
-        "--name", "../boom",
-        "--output-dir", str(output_dir),
-    ])
+    result = runner.invoke(
+        app,
+        [
+            "filter",
+            "--query",
+            "farben",
+            "--name",
+            "../boom",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
     assert result.exit_code == 2
     assert "invalid --name" in (result.stderr or result.output)

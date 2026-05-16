@@ -1,4 +1,5 @@
 """Server route tests with NaraClient swapped via FastAPI dependency overrides."""
+
 from __future__ import annotations
 
 import json
@@ -85,16 +86,19 @@ def test_search_minimal_returns_normalized_hits(client_and_fake):
 
 def test_search_passes_filter_params_through(client_and_fake):
     client, fake = client_and_fake
-    r = client.get("/api/search", params=[
-        ("q", "constitution"),
-        ("level", "fileUnit"),
-        ("level", "item"),
-        ("year_from", "1940"),
-        ("year_to", "1950"),
-        ("has_digital_objects", "true"),
-        ("page", "2"),
-        ("page_size", "50"),
-    ])
+    r = client.get(
+        "/api/search",
+        params=[
+            ("q", "constitution"),
+            ("level", "fileUnit"),
+            ("level", "item"),
+            ("year_from", "1940"),
+            ("year_to", "1950"),
+            ("has_digital_objects", "true"),
+            ("page", "2"),
+            ("page_size", "50"),
+        ],
+    )
     assert r.status_code == 200, r.text
     assert len(fake.search_calls) == 1
     sent = fake.search_calls[0]

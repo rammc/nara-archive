@@ -1,8 +1,7 @@
 """HTTP-level tests for /api/jobs (lifespan-aware)."""
+
 from __future__ import annotations
 
-import asyncio
-import json
 import time
 from pathlib import Path
 
@@ -30,15 +29,32 @@ def _config(tmp_path: Path) -> Config:
 
 def _runners():
     def fetch_and_persist(parent_naid, paths, *, limit, client):
-        return {"source": {"parent_naid": parent_naid},
-                "file_units": [{"naid": "U", "digital_object_count": 0, "digital_objects": []}]}
+        return {
+            "source": {"parent_naid": parent_naid},
+            "file_units": [{"naid": "U", "digital_object_count": 0, "digital_objects": []}],
+        }
 
-    def download_all(paths, *, rate, client, metadata, progress_callback=None,
-                     cancel_event=None, show_progress_bars=False):
+    def download_all(
+        paths,
+        *,
+        rate,
+        client,
+        metadata,
+        progress_callback=None,
+        cancel_event=None,
+        show_progress_bars=False,
+    ):
         return {"downloaded": 0, "skipped": 0, "failed": 0}
 
-    def build_pdfs(paths, *, metadata, force=False, progress_callback=None,
-                   cancel_event=None, show_progress_bars=False):
+    def build_pdfs(
+        paths,
+        *,
+        metadata,
+        force=False,
+        progress_callback=None,
+        cancel_event=None,
+        show_progress_bars=False,
+    ):
         return [{"naid": "U", "status": "ok", "pdf_path": "pdfs/x.pdf"}]
 
     return {
@@ -47,17 +63,16 @@ def _runners():
         "build_pdfs": build_pdfs,
         "write_manifest": lambda *a, **kw: {},
         "make_client": lambda cfg: object(),
-        "apply_filter": lambda paths, **kw: (paths.root / "metadata-x.json",
-                                              {"filter": {"total_source_count": 0,
-                                                          "matched_count": 0},
-                                               "file_units": []}),
+        "apply_filter": lambda paths, **kw: (
+            paths.root / "metadata-x.json",
+            {"filter": {"total_source_count": 0, "matched_count": 0}, "file_units": []},
+        ),
     }
 
 
 def _app_with_mocked_manager(tmp_path):
     """Create an app where the lifespan installs a JobManager with mocked runners."""
     from contextlib import asynccontextmanager
-    import nara.server.app as app_module
 
     cfg = _config(tmp_path)
     runners = _runners()
@@ -86,6 +101,7 @@ def test_full_jobs_lifecycle(tmp_path, monkeypatch):
     # Patch the manager factory so any JobManager created inside the lifespan
     # gets the fast runners instead of the real downloader / pdfbuild.
     import nara.jobs as jobs_mod
+
     monkeypatch.setattr(jobs_mod, "DEFAULT_RUNNERS", _runners())
 
     app = create_app(_config(tmp_path))
@@ -96,8 +112,7 @@ def test_full_jobs_lifecycle(tmp_path, monkeypatch):
         assert r.json() == {"jobs": []}
 
         # Create a job.
-        r = c.post("/api/jobs", json={"parent_naid": "7840517", "name": "smoke",
-                                       "rate": 0.01})
+        r = c.post("/api/jobs", json={"parent_naid": "7840517", "name": "smoke", "rate": 0.01})
         assert r.status_code == 201, r.text
         job = r.json()
         job_id = job["job_id"]
@@ -135,6 +150,7 @@ def test_full_jobs_lifecycle(tmp_path, monkeypatch):
 
 def test_delete_unknown_returns_404(tmp_path, monkeypatch):
     import nara.jobs as jobs_mod
+
     monkeypatch.setattr(jobs_mod, "DEFAULT_RUNNERS", _runners())
     app = create_app(_config(tmp_path))
     with TestClient(app) as c:
@@ -144,6 +160,7 @@ def test_delete_unknown_returns_404(tmp_path, monkeypatch):
 
 def test_post_validation_filter_requires_name(tmp_path, monkeypatch):
     import nara.jobs as jobs_mod
+
     monkeypatch.setattr(jobs_mod, "DEFAULT_RUNNERS", _runners())
     app = create_app(_config(tmp_path))
     with TestClient(app) as c:

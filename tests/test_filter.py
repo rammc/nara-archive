@@ -1,4 +1,5 @@
 """Tests for the filter subcommand and its pure helpers."""
+
 from __future__ import annotations
 
 import json
@@ -121,8 +122,7 @@ def test_apply_filter_refuses_overwrite_without_force(tmp_path):
     assert "already exists" in str(exc.value)
 
     # force=True succeeds.
-    apply_filter(paths, name="igfarben", query=r"farben",
-                 metadata_file=src, force=True)
+    apply_filter(paths, name="igfarben", query=r"farben", metadata_file=src, force=True)
 
 
 def test_apply_filter_rejects_invalid_name(tmp_path):
@@ -131,8 +131,7 @@ def test_apply_filter_rejects_invalid_name(tmp_path):
     paths = OutputPaths(root=tmp_path)
     paths.ensure()
     with pytest.raises(ValueError) as exc:
-        apply_filter(paths, name="../etc/passwd", query="farben",
-                     metadata_file=src)
+        apply_filter(paths, name="../etc/passwd", query="farben", metadata_file=src)
     assert "invalid --name" in str(exc.value)
 
 
@@ -144,6 +143,7 @@ def test_make_filter_doc_does_not_mutate_source():
         "file_units": units,
     }
     snapshot = json.dumps(source_doc, sort_keys=True)
-    make_filter_doc(source_doc, units[:1], name="x", query="q",
-                    fields=["title"], source_file=Path("a.json"))
+    make_filter_doc(
+        source_doc, units[:1], name="x", query="q", fields=["title"], source_file=Path("a.json")
+    )
     assert json.dumps(source_doc, sort_keys=True) == snapshot

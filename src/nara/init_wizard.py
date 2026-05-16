@@ -1,4 +1,5 @@
 """Interactive setup wizard for ``nara init``."""
+
 from __future__ import annotations
 
 import shutil
@@ -87,23 +88,23 @@ def run_wizard(
     target = target or user_config_path()
 
     if target.exists() and not reset:
-        if not Confirm.ask(
-            f"[yellow]{target} already exists — overwrite?[/]", default=False
-        ):
+        if not Confirm.ask(f"[yellow]{target} already exists — overwrite?[/]", default=False):
             raise WizardAborted("user declined overwrite")
     if target.exists() and reset:
         backup = target.with_suffix(target.suffix + ".bak")
         shutil.copy2(target, backup)
         console.print(f"[dim]Backed up existing config to {backup}[/]")
 
-    console.print(Panel.fit(
-        Text.from_markup(
-            "[bold]nara-archive[/] · setup wizard\n"
-            "Bulk-download NARA Catalog digital objects and assemble PDFs.\n\n"
-            "This wizard writes [cyan]" + str(target) + "[/].",
-        ),
-        border_style="amber" if False else "yellow",  # rich has no 'amber' style key
-    ))
+    console.print(
+        Panel.fit(
+            Text.from_markup(
+                "[bold]nara-archive[/] · setup wizard\n"
+                "Bulk-download NARA Catalog digital objects and assemble PDFs.\n\n"
+                "This wizard writes [cyan]" + str(target) + "[/].",
+            ),
+            border_style="amber" if False else "yellow",  # rich has no 'amber' style key
+        )
+    )
 
     # Step 1: API key
     console.print()
@@ -128,7 +129,9 @@ def run_wizard(
             default="r",
         )
         if choice == "s":
-            console.print("[dim]saving unvalidated key — `nara serve` health-check will tell you[/]")
+            console.print(
+                "[dim]saving unvalidated key — `nara serve` health-check will tell you[/]"
+            )
             break
         if choice == "a":
             raise WizardAborted("user aborted at API key step")
@@ -156,14 +159,16 @@ def run_wizard(
         target=target,
     )
     console.print()
-    console.print(Panel.fit(
-        Text.from_markup(
-            f"[green]✓ Setup complete.[/] Config written to [cyan]{target}[/]\n\n"
-            "Next steps:\n"
-            "  [bold]nara serve[/]                       launch the web UI\n"
-            "  [bold]nara metadata --parent-naid …[/]    use the CLI directly"
-        ),
-        border_style="green",
-    ))
+    console.print(
+        Panel.fit(
+            Text.from_markup(
+                f"[green]✓ Setup complete.[/] Config written to [cyan]{target}[/]\n\n"
+                "Next steps:\n"
+                "  [bold]nara serve[/]                       launch the web UI\n"
+                "  [bold]nara metadata --parent-naid …[/]    use the CLI directly"
+            ),
+            border_style="green",
+        )
+    )
     _ = datetime.now(timezone.utc)  # ack timestamp written inside write_config
     return target

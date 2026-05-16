@@ -13,6 +13,7 @@ Resolution order (first match wins) per source:
 This module is the single source of truth — no other module should call
 ``os.getenv`` for NARA-related values.
 """
+
 from __future__ import annotations
 
 import os
@@ -108,15 +109,11 @@ def resolve_config(*, load_dotenv: bool = True) -> Config:
 
     api_key = os.environ.get("NARA_API_KEY") or api_section.get("key")
     api_base_url = (
-        os.environ.get("NARA_API_BASE_URL")
-        or api_section.get("base_url")
-        or DEFAULT_API_BASE_URL
+        os.environ.get("NARA_API_BASE_URL") or api_section.get("base_url") or DEFAULT_API_BASE_URL
     )
     try:
         default_rate = float(
-            os.environ.get("NARA_DEFAULT_RATE")
-            or api_section.get("default_rate")
-            or DEFAULT_RATE
+            os.environ.get("NARA_DEFAULT_RATE") or api_section.get("default_rate") or DEFAULT_RATE
         )
     except (TypeError, ValueError):
         default_rate = DEFAULT_RATE
@@ -167,10 +164,7 @@ def write_config(
     target.parent.mkdir(parents=True, exist_ok=True)
 
     ack = (
-        datetime.now(timezone.utc)
-        .replace(microsecond=0)
-        .isoformat()
-        .replace("+00:00", "Z")
+        datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
         if terms_acknowledged
         else None
     )

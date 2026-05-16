@@ -1,4 +1,5 @@
 """Topic-scoped subset selection from a metadata.json file."""
+
 from __future__ import annotations
 
 import json
@@ -108,17 +109,19 @@ def apply_filter(
     )
 
     if not matches:
-        log.info("filter %s: 0/%d matched — nothing written",
-                 name, len(source_doc.get("file_units", [])))
+        log.info(
+            "filter %s: 0/%d matched — nothing written", name, len(source_doc.get("file_units", []))
+        )
         return out_path, doc
 
     if out_path.exists() and not force:
-        raise FilterError(
-            f"{out_path} already exists — re-run with --force to overwrite."
-        )
+        raise FilterError(f"{out_path} already exists — re-run with --force to overwrite.")
     atomic_write_text(out_path, json.dumps(doc, indent=2, ensure_ascii=False))
     log.info(
         "filter %s: %d/%d matched, written to %s",
-        name, len(matches), len(source_doc.get("file_units", [])), out_path,
+        name,
+        len(matches),
+        len(source_doc.get("file_units", [])),
+        out_path,
     )
     return out_path, doc

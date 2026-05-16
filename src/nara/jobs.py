@@ -14,17 +14,17 @@ Cancellation: the user signals with DELETE, we set a ``threading.Event`` that
 the phase code polls between files / units. The current file (or unit) runs
 to completion to keep on-disk state clean; resume semantics handle the rest.
 """
+
 from __future__ import annotations
 
 import asyncio
 import json
 import logging
-import os
 import threading
 import uuid
-from dataclasses import asdict, dataclass, field, replace
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Awaitable, Callable
+from typing import Any, Callable
 
 from .api import NaraApiError, NaraClient
 from .config import Config
@@ -124,9 +124,7 @@ class JobManager:
         runners: PhaseRunners | None = None,
     ) -> None:
         self._config = config
-        self._persistence_path = (
-            persistence_path or config.output_dir / "jobs.json"
-        )
+        self._persistence_path = persistence_path or config.output_dir / "jobs.json"
         self._runners: PhaseRunners = {**DEFAULT_RUNNERS, **(runners or {})}
 
         self._jobs: dict[str, Job] = {}
@@ -290,7 +288,10 @@ class JobManager:
             self._persist()
             meta = await asyncio.to_thread(
                 self._runners["fetch_and_persist"],
-                job.parent_naid, paths, limit=300, client=client,
+                job.parent_naid,
+                paths,
+                limit=300,
+                client=client,
             )
 
             # Optional filter step
@@ -318,8 +319,10 @@ class JobManager:
             job.status = "downloading"
             job.progress = JobProgress(
                 phase="downloading",
-                total=sum(u.get("digital_object_count", 0)
-                          for u in metadata_for_phases.get("file_units", [])),
+                total=sum(
+                    u.get("digital_object_count", 0)
+                    for u in metadata_for_phases.get("file_units", [])
+                ),
             )
             self._persist()
             await asyncio.to_thread(
@@ -432,8 +435,7 @@ class JobManager:
         try:
             doc = json.loads(self._persistence_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
-            log.warning("jobs.json is corrupt at %s — starting fresh",
-                        self._persistence_path)
+            log.warning("jobs.json is corrupt at %s — starting fresh", self._persistence_path)
             return
         for d in doc.get("jobs", []):
             try:

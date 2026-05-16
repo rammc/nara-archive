@@ -1,4 +1,5 @@
 """Thin HTTP client for the NARA Catalog API v2."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -56,7 +57,9 @@ def _is_retryable(exc: BaseException) -> bool:
 class NaraClient:
     """Minimal client. Caller is responsible for rate-limiting between calls."""
 
-    def __init__(self, api_key: str | None = None, *, base: str | None = None, timeout: float = 30.0):
+    def __init__(
+        self, api_key: str | None = None, *, base: str | None = None, timeout: float = 30.0
+    ):
         cfg = resolve_config()
         key = api_key or cfg.api_key
         base_url = base or cfg.api_base_url
@@ -100,8 +103,7 @@ class NaraClient:
             return self._get_json(url, params={"limit": limit})
         except NaraUpstreamDown as e:
             raise NaraApiError(
-                f"NARA API is currently unreachable while fetching children of "
-                f"{parent_naid}: {e}"
+                f"NARA API is currently unreachable while fetching children of {parent_naid}: {e}"
             ) from e
         except RetryError as e:
             raise NaraApiError(f"Exhausted retries fetching children of {parent_naid}: {e}") from e
@@ -117,9 +119,7 @@ class NaraClient:
         try:
             return self._get_json(url, params=params)
         except NaraUpstreamDown as e:
-            raise NaraApiError(
-                f"NARA API is currently unreachable for /records/search: {e}"
-            ) from e
+            raise NaraApiError(f"NARA API is currently unreachable for /records/search: {e}") from e
         except RetryError as e:
             raise NaraApiError(f"Exhausted retries on /records/search: {e}") from e
         except requests.exceptions.HTTPError as e:

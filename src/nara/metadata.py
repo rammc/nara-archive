@@ -1,12 +1,19 @@
 """Phase 1: fetch parent's children metadata and normalize it."""
+
 from __future__ import annotations
 
 import json
 from collections import Counter
-from typing import Any
 
-from .api import API_BASE, NaraApiError, NaraClient
-from .utils import OutputPaths, atomic_write_text, get_logger, make_slug, safe_get as _safe_get, utc_now_iso
+from .api import API_BASE, NaraClient
+from .utils import (
+    OutputPaths,
+    atomic_write_text,
+    get_logger,
+    make_slug,
+    safe_get as _safe_get,
+    utc_now_iso,
+)
 
 SCHEMA_VERSION = "1.0"
 
@@ -42,8 +49,9 @@ def _normalize_digital_object(obj: dict, naid: str) -> dict | None:
     except (TypeError, ValueError):
         sort_int = None
     if sort_int is None:
-        log.warning("naid=%s sortNumber missing for %s — will fall back to filename order",
-                    naid, filename)
+        log.warning(
+            "naid=%s sortNumber missing for %s — will fall back to filename order", naid, filename
+        )
     return {
         "filename": filename,
         "url": url,
@@ -57,13 +65,18 @@ def _normalize_record(record: dict) -> dict:
     log = get_logger()
     naid = str(record.get("naId") or "").strip()
     if not naid:
-        log.warning("record missing naId — keeping with empty id, downstream will skip: %r",
-                    {k: record.get(k) for k in ("title", "levelOfDescription")})
+        log.warning(
+            "record missing naId — keeping with empty id, downstream will skip: %r",
+            {k: record.get(k) for k in ("title", "levelOfDescription")},
+        )
     title = record.get("title")
     raw_objs = record.get("digitalObjects") or []
     if not isinstance(raw_objs, list):
-        log.warning("naid=%s digitalObjects not a list (%s) — treating as empty",
-                    naid, type(raw_objs).__name__)
+        log.warning(
+            "naid=%s digitalObjects not a list (%s) — treating as empty",
+            naid,
+            type(raw_objs).__name__,
+        )
         raw_objs = []
     objs: list[dict] = []
     for obj in raw_objs:
@@ -123,7 +136,10 @@ def fetch_and_persist(
     if isinstance(total, int) and total > limit:
         log.warning(
             "parent_naid=%s API reports %d children but limit was %d — re-run with --limit %d",
-            parent_naid, total, limit, total,
+            parent_naid,
+            total,
+            limit,
+            total,
         )
 
     atomic_write_text(paths.metadata_raw, json.dumps(raw, indent=2, ensure_ascii=False))
@@ -175,8 +191,11 @@ def _print_summary(doc: dict, *, total_reported: int | None) -> None:
 
     log.info("== Metadata summary ==")
     log.info("Parent NAID:        %s", doc["source"]["parent_naid"])
-    log.info("File units fetched: %d (API reported %s)", n_units,
-             total_reported if total_reported is not None else "n/a")
+    log.info(
+        "File units fetched: %d (API reported %s)",
+        n_units,
+        total_reported if total_reported is not None else "n/a",
+    )
     log.info("Digital objects:    %d", n_objs)
     if type_counter:
         log.info("By objectType:")

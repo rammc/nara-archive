@@ -1,7 +1,7 @@
 """Tests for the PDF assembly logic."""
+
 from __future__ import annotations
 
-import io
 from pathlib import Path
 
 import pypdf

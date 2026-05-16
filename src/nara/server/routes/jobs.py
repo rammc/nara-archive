@@ -1,4 +1,5 @@
 """Routes for the JobManager: create / list / get / cancel / restart."""
+
 from __future__ import annotations
 
 from dataclasses import asdict

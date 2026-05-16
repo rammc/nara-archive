@@ -1,4 +1,5 @@
 """Tests for the JobManager. Real NARA API and file-pipeline are mocked."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,7 +12,7 @@ import pytest
 
 from nara.config import Config
 from nara.downloader import JobCancelled
-from nara.jobs import ACTIVE_STATES, Job, JobManager
+from nara.jobs import JobManager
 
 
 def _config(tmp_path: Path) -> Config:
@@ -33,10 +34,18 @@ def _fixture_meta() -> dict:
     return {
         "source": {"parent_naid": "PARENT"},
         "file_units": [
-            {"naid": "U1", "title": "Unit 1", "digital_object_count": 2,
-             "digital_objects": [{"filename": "a.jpg"}, {"filename": "b.jpg"}]},
-            {"naid": "U2", "title": "Unit 2", "digital_object_count": 1,
-             "digital_objects": [{"filename": "c.jpg"}]},
+            {
+                "naid": "U1",
+                "title": "Unit 1",
+                "digital_object_count": 2,
+                "digital_objects": [{"filename": "a.jpg"}, {"filename": "b.jpg"}],
+            },
+            {
+                "naid": "U2",
+                "title": "Unit 2",
+                "digital_object_count": 1,
+                "digital_objects": [{"filename": "c.jpg"}],
+            },
         ],
     }
 
@@ -74,8 +83,16 @@ def _fake_runners(
             },
         )
 
-    def download_all(paths, *, rate, client, metadata, progress_callback=None,
-                     cancel_event=None, show_progress_bars=False):
+    def download_all(
+        paths,
+        *,
+        rate,
+        client,
+        metadata,
+        progress_callback=None,
+        cancel_event=None,
+        show_progress_bars=False,
+    ):
         if pre_download_hook is not None:
             pre_download_hook()
         if fail_at == "download":
@@ -84,18 +101,27 @@ def _fake_runners(
             if cancel_event is not None and cancel_event.is_set():
                 raise JobCancelled("cancelled in download")
             if progress_callback is not None:
-                progress_callback({
-                    "phase": "downloading",
-                    "current": i + 1,
-                    "total": download_ticks,
-                    "current_naid": f"U{i+1}",
-                    "bytes_downloaded": (i + 1) * 1000,
-                })
+                progress_callback(
+                    {
+                        "phase": "downloading",
+                        "current": i + 1,
+                        "total": download_ticks,
+                        "current_naid": f"U{i + 1}",
+                        "bytes_downloaded": (i + 1) * 1000,
+                    }
+                )
             time.sleep(0.005)
         return {"downloaded": download_ticks, "skipped": 0, "failed": 0}
 
-    def build_pdfs(paths, *, metadata, force=False, progress_callback=None,
-                   cancel_event=None, show_progress_bars=False):
+    def build_pdfs(
+        paths,
+        *,
+        metadata,
+        force=False,
+        progress_callback=None,
+        cancel_event=None,
+        show_progress_bars=False,
+    ):
         if fail_at == "build":
             raise RuntimeError("boom: build")
         units = metadata.get("file_units", [])
@@ -103,16 +129,24 @@ def _fake_runners(
         for i, u in enumerate(units, start=1):
             if cancel_event is not None and cancel_event.is_set():
                 raise JobCancelled("cancelled in build")
-            results.append({
-                "naid": u["naid"],
-                "status": "ok",
-                "pdf_path": f"pdfs/{i:04d}-{u['naid']}.pdf",
-                "pdf_size_bytes": 1234,
-                "page_count": 2,
-            })
+            results.append(
+                {
+                    "naid": u["naid"],
+                    "status": "ok",
+                    "pdf_path": f"pdfs/{i:04d}-{u['naid']}.pdf",
+                    "pdf_size_bytes": 1234,
+                    "page_count": 2,
+                }
+            )
             if progress_callback is not None:
-                progress_callback({"phase": "building_pdfs", "current": i,
-                                   "total": len(units), "current_naid": u["naid"]})
+                progress_callback(
+                    {
+                        "phase": "building_pdfs",
+                        "current": i,
+                        "total": len(units),
+                        "current_naid": u["naid"],
+                    }
+                )
         return results
 
     def write_manifest(paths, *, metadata, build_results, out_path=None):
@@ -142,6 +176,7 @@ async def _wait_for(predicate, *, timeout: float = 3.0, interval: float = 0.02):
 
 # ---------- happy path ----------
 
+
 def test_create_runs_through_to_done(tmp_path):
     asyncio.run(_test_create_runs_through_to_done(tmp_path))
 
@@ -164,6 +199,7 @@ async def _test_create_runs_through_to_done(tmp_path):
 
 # ---------- filter path ----------
 
+
 def test_filter_job_writes_subset_manifest(tmp_path):
     asyncio.run(_test_filter_job(tmp_path))
 
@@ -172,8 +208,7 @@ async def _test_filter_job(tmp_path):
     mgr = JobManager(config=_config(tmp_path), runners=_fake_runners(filter_matches=1))
     await mgr.startup()
     try:
-        job = await mgr.create(parent_naid="P", name="igfarben",
-                               filter_query=r"farben")
+        job = await mgr.create(parent_naid="P", name="igfarben", filter_query=r"farben")
         await _wait_for(lambda: mgr.get(job.job_id).status == "done")
         finished = mgr.get(job.job_id)
         assert finished.status == "done"
@@ -217,6 +252,7 @@ async def _test_filter_no_name(tmp_path):
 
 # ---------- failure ----------
 
+
 def test_failure_in_download_phase(tmp_path):
     asyncio.run(_test_failure(tmp_path, "download"))
 
@@ -226,8 +262,7 @@ def test_failure_in_build_phase(tmp_path):
 
 
 async def _test_failure(tmp_path, phase):
-    mgr = JobManager(config=_config(tmp_path),
-                     runners=_fake_runners(fail_at=phase))
+    mgr = JobManager(config=_config(tmp_path), runners=_fake_runners(fail_at=phase))
     await mgr.startup()
     try:
         job = await mgr.create(parent_naid="P")
@@ -240,6 +275,7 @@ async def _test_failure(tmp_path, phase):
 
 
 # ---------- cancellation ----------
+
 
 def test_cancel_before_start_marks_cancelled(tmp_path):
     asyncio.run(_test_cancel_before_start(tmp_path))
@@ -283,8 +319,16 @@ def test_cancel_during_download_stops_cleanly(tmp_path):
 
 async def _test_cancel_during_download(tmp_path):
     # Long-running download that polls cancel_event ~once per ms.
-    def long_download(paths, *, rate, client, metadata, progress_callback=None,
-                      cancel_event=None, show_progress_bars=False):
+    def long_download(
+        paths,
+        *,
+        rate,
+        client,
+        metadata,
+        progress_callback=None,
+        cancel_event=None,
+        show_progress_bars=False,
+    ):
         for i in range(1000):
             if cancel_event is not None and cancel_event.is_set():
                 raise JobCancelled("cancelled in download")
@@ -311,6 +355,7 @@ async def _test_cancel_during_download(tmp_path):
 
 
 # ---------- persistence + startup recovery ----------
+
 
 def test_persistence_roundtrip(tmp_path):
     asyncio.run(_test_persistence(tmp_path))
@@ -343,24 +388,39 @@ def test_active_jobs_marked_interrupted_on_restart(tmp_path):
     cfg = _config(tmp_path)
     cfg.output_dir.mkdir(parents=True, exist_ok=True)
     jobs_path = cfg.output_dir / "jobs.json"
-    jobs_path.write_text(json.dumps({
-        "schema_version": 1,
-        "jobs": [{
-            "job_id": "ghost",
-            "parent_naid": "X",
-            "name": None,
-            "filter_query": None,
-            "rate": 0.5,
-            "status": "downloading",
-            "created_at": "2026-05-16T00:00:00Z",
-            "started_at": "2026-05-16T00:00:00Z",
-            "completed_at": None,
-            "progress": {"phase": "downloading", "current": 5, "total": 10,
-                         "current_naid": "U1", "bytes_downloaded": 1234},
-            "result": {"manifest_path": None, "successful_pdfs": None,
-                       "failed_pdfs": None, "errors": []},
-        }]
-    }))
+    jobs_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "jobs": [
+                    {
+                        "job_id": "ghost",
+                        "parent_naid": "X",
+                        "name": None,
+                        "filter_query": None,
+                        "rate": 0.5,
+                        "status": "downloading",
+                        "created_at": "2026-05-16T00:00:00Z",
+                        "started_at": "2026-05-16T00:00:00Z",
+                        "completed_at": None,
+                        "progress": {
+                            "phase": "downloading",
+                            "current": 5,
+                            "total": 10,
+                            "current_naid": "U1",
+                            "bytes_downloaded": 1234,
+                        },
+                        "result": {
+                            "manifest_path": None,
+                            "successful_pdfs": None,
+                            "failed_pdfs": None,
+                            "errors": [],
+                        },
+                    }
+                ],
+            }
+        )
+    )
     asyncio.run(_assert_restored_as_interrupted(cfg, "ghost"))
 
 
@@ -377,6 +437,7 @@ async def _assert_restored_as_interrupted(cfg, job_id):
 
 
 # ---------- remove + restart ----------
+
 
 def test_remove_purges_terminal_job(tmp_path):
     asyncio.run(_test_remove_terminal(tmp_path))
@@ -401,8 +462,16 @@ def test_remove_refuses_active_job(tmp_path):
 async def _test_remove_active(tmp_path):
     block = threading.Event()
 
-    def slow_download(paths, *, rate, client, metadata, progress_callback=None,
-                      cancel_event=None, show_progress_bars=False):
+    def slow_download(
+        paths,
+        *,
+        rate,
+        client,
+        metadata,
+        progress_callback=None,
+        cancel_event=None,
+        show_progress_bars=False,
+    ):
         while not block.is_set() and not (cancel_event and cancel_event.is_set()):
             time.sleep(0.005)
         return {"downloaded": 0, "skipped": 0, "failed": 0}
@@ -445,6 +514,7 @@ async def _test_restart(tmp_path):
 
 
 # ---------- progress propagation ----------
+
 
 def test_progress_events_update_job_progress(tmp_path):
     asyncio.run(_test_progress(tmp_path))

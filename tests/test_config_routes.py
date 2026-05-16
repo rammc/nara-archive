@@ -1,10 +1,10 @@
 """Tests for /api/config GET / PATCH and the reveal-folder endpoint."""
+
 from __future__ import annotations
 
 import subprocess
 from pathlib import Path
 
-import pytest
 from fastapi.testclient import TestClient
 
 from nara.config import Config, write_config
@@ -68,8 +68,7 @@ def test_patch_refuses_without_config_path(tmp_path):
 def test_patch_updates_rate_and_persists(tmp_path):
     app = create_app(_config(tmp_path, persist=True))
     c = TestClient(app)
-    r = c.patch("/api/config", json={"default_rate": 1.5,
-                                       "auto_open_browser": False})
+    r = c.patch("/api/config", json={"default_rate": 1.5, "auto_open_browser": False})
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["default_rate"] == 1.5
@@ -96,10 +95,12 @@ def test_patch_rejects_invalid_rate(tmp_path):
 def test_reveal_invokes_platform_opener(tmp_path, monkeypatch):
     calls = []
 
+    class FakeResult:
+        returncode = 0
+
     def fake_run(cmd, **kwargs):
         calls.append(cmd)
-        class R: returncode = 0
-        return R()
+        return FakeResult()
 
     monkeypatch.setattr(subprocess, "run", fake_run)
     monkeypatch.setattr("sys.platform", "darwin")

@@ -1,4 +1,5 @@
 """Tests for the metadata normalizer."""
+
 from __future__ import annotations
 
 import json
@@ -18,7 +19,10 @@ def test_normalize_yields_all_file_units():
     units = normalize_response(raw)
     assert len(units) == 4
     assert {u["naid"] for u in units} == {
-        "10000001", "10000002", "10000003", "10000004",
+        "10000001",
+        "10000002",
+        "10000003",
+        "10000004",
     }
 
 

@@ -1,4 +1,5 @@
 """Config routes: read masked config, patch non-secret fields, reveal folder."""
+
 from __future__ import annotations
 
 import subprocess
@@ -59,8 +60,7 @@ def patch_config(body: ConfigPatch, request: Request) -> ConfigDto:
         )
     new_rate = body.default_rate if body.default_rate is not None else cfg.default_rate
     new_browser = (
-        body.auto_open_browser if body.auto_open_browser is not None
-        else cfg.auto_open_browser
+        body.auto_open_browser if body.auto_open_browser is not None else cfg.auto_open_browser
     )
     write_config(
         api_key=cfg.api_key,
@@ -96,14 +96,11 @@ def _opener_for_platform(platform: str) -> list[str] | None:
 def reveal_config_dir(request: Request) -> RevealResponse:
     """Open the platform file-manager pointed at ``~/.nara``."""
     cfg = request.app.state.config
-    target: Path = (cfg.config_path.parent if cfg.config_path
-                    else user_config_dir())
+    target: Path = cfg.config_path.parent if cfg.config_path else user_config_dir()
     target.mkdir(parents=True, exist_ok=True)
     opener = _opener_for_platform(sys.platform)
     if opener is None:
-        raise HTTPException(
-            501, f"don't know how to open a folder on platform={sys.platform!r}"
-        )
+        raise HTTPException(501, f"don't know how to open a folder on platform={sys.platform!r}")
     try:
         subprocess.run([*opener, str(target)], check=False, timeout=5)
     except (OSError, subprocess.SubprocessError) as e:

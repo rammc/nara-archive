@@ -1,4 +1,5 @@
 """Phase 3: assemble one consolidated PDF per File Unit."""
+
 from __future__ import annotations
 
 import shutil
@@ -153,9 +154,7 @@ def _sorted_sources(unit: dict, unit_dir: Path) -> list[tuple[Path, dict]]:
         if p.exists():
             out.append((p, o))
         else:
-            get_logger().warning(
-                "naid=%s missing on disk: %s", unit.get("naid"), o.get("filename")
-            )
+            get_logger().warning("naid=%s missing on disk: %s", unit.get("naid"), o.get("filename"))
     return out
 
 
@@ -189,14 +188,16 @@ def build_pdfs(
         if progress_callback is None:
             return
         try:
-            progress_callback({
-                "phase": "building_pdfs",
-                "current": seq,
-                "total": total,
-                "current_naid": naid,
-                "status": status,
-                "page_count": page_count,
-            })
+            progress_callback(
+                {
+                    "phase": "building_pdfs",
+                    "current": seq,
+                    "total": total,
+                    "current_naid": naid,
+                    "status": status,
+                    "page_count": page_count,
+                }
+            )
         except Exception:  # noqa: BLE001
             log.exception("progress_callback raised; continuing")
 
@@ -213,9 +214,17 @@ def build_pdfs(
         unit_dir = paths.raw_dir_for(naid)
         ordered = _sorted_sources(unit, unit_dir)
         if not ordered:
-            results.append(_result_row(unit, seq, status="failed",
-                                       pdf_path=None, pdf_size=0, page_count=0,
-                                       reason="no files on disk"))
+            results.append(
+                _result_row(
+                    unit,
+                    seq,
+                    status="failed",
+                    pdf_path=None,
+                    pdf_size=0,
+                    page_count=0,
+                    reason="no files on disk",
+                )
+            )
             log.error("naid=%s no source files on disk — failed", naid)
             _append_build_error(paths, naid, "no files on disk")
             _emit(seq, naid, "failed")
@@ -225,19 +234,33 @@ def build_pdfs(
         kinds = [classify_source(p) for (p, _o) in ordered]
         usable_count = sum(1 for k in kinds if k in ("image", "pdf"))
         if usable_count == 0:
-            results.append(_result_row(unit, seq, status="skipped_non_document",
-                                       pdf_path=None, pdf_size=0, page_count=0))
-            log.info("naid=%s skipped_non_document (all %d sources non-doc)",
-                     naid, len(ordered))
+            results.append(
+                _result_row(
+                    unit,
+                    seq,
+                    status="skipped_non_document",
+                    pdf_path=None,
+                    pdf_size=0,
+                    page_count=0,
+                )
+            )
+            log.info("naid=%s skipped_non_document (all %d sources non-doc)", naid, len(ordered))
             _emit(seq, naid, "skipped_non_document")
             continue
 
         out_path = paths.pdfs_dir / f"{seq:04d}-{naid}_{slug}.pdf"
         if out_path.exists() and out_path.stat().st_size > 0 and not force:
             page_count = _safe_page_count(out_path)
-            results.append(_result_row(unit, seq, status="ok",
-                                       pdf_path=out_path, pdf_size=out_path.stat().st_size,
-                                       page_count=page_count))
+            results.append(
+                _result_row(
+                    unit,
+                    seq,
+                    status="ok",
+                    pdf_path=out_path,
+                    pdf_size=out_path.stat().st_size,
+                    page_count=page_count,
+                )
+            )
             log.info("naid=%s skip rebuild (exists, %d pages)", naid, page_count)
             _emit(seq, naid, "ok", page_count)
             continue
@@ -254,17 +277,27 @@ def build_pdfs(
                 _append_build_error(paths, naid, f"assemble failed: {e}")
                 if out_path.exists():
                     out_path.unlink(missing_ok=True)
-                results.append(_result_row(unit, seq, status="failed",
-                                           pdf_path=None, pdf_size=0, page_count=0,
-                                           reason=str(e)))
+                results.append(
+                    _result_row(
+                        unit,
+                        seq,
+                        status="failed",
+                        pdf_path=None,
+                        pdf_size=0,
+                        page_count=0,
+                        reason=str(e),
+                    )
+                )
                 _emit(seq, naid, "failed")
                 continue
 
         size = out_path.stat().st_size
-        results.append(_result_row(unit, seq, status="ok",
-                                   pdf_path=out_path, pdf_size=size, page_count=page_count))
-        log.info("naid=%s built %s pages=%d size=%d",
-                 naid, out_path.name, page_count, size)
+        results.append(
+            _result_row(
+                unit, seq, status="ok", pdf_path=out_path, pdf_size=size, page_count=page_count
+            )
+        )
+        log.info("naid=%s built %s pages=%d size=%d", naid, out_path.name, page_count, size)
         _emit(seq, naid, "ok", page_count)
 
     return results

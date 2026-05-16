@@ -1,4 +1,5 @@
 """Tests for the layered config resolver."""
+
 from __future__ import annotations
 
 import textwrap
@@ -46,7 +47,9 @@ def test_resolve_falls_back_to_defaults_when_nothing_set(isolated_home):
 
 def test_toml_supplies_values_when_no_env(isolated_home):
     home, _ = isolated_home
-    _write_toml(home, """
+    _write_toml(
+        home,
+        """
         [api]
         key = "from-toml"
         base_url = "https://example.test/api/"
@@ -58,7 +61,8 @@ def test_toml_supplies_values_when_no_env(isolated_home):
         [meta]
         nara_terms_acknowledged = true
         acknowledged_at = "2026-05-16T10:00:00Z"
-    """)
+    """,
+    )
     cfg = cfgmod.resolve_config(load_dotenv=False)
     assert cfg.api_key == "from-toml"
     assert cfg.api_base_url == "https://example.test/api/"
@@ -70,10 +74,13 @@ def test_toml_supplies_values_when_no_env(isolated_home):
 
 def test_env_beats_toml(isolated_home, monkeypatch):
     home, _ = isolated_home
-    _write_toml(home, """
+    _write_toml(
+        home,
+        """
         [api]
         key = "from-toml"
-    """)
+    """,
+    )
     monkeypatch.setenv("NARA_API_KEY", "from-env")
     cfg = cfgmod.resolve_config(load_dotenv=False)
     assert cfg.api_key == "from-env"
@@ -81,10 +88,13 @@ def test_env_beats_toml(isolated_home, monkeypatch):
 
 def test_dotenv_beats_toml_when_loaded(isolated_home, monkeypatch):
     home, cwd = isolated_home
-    _write_toml(home, """
+    _write_toml(
+        home,
+        """
         [api]
         key = "from-toml"
-    """)
+    """,
+    )
     (cwd / ".env").write_text("NARA_API_KEY=from-dotenv\n", encoding="utf-8")
     # Ensure no real env var pre-empts the .env load.
     monkeypatch.delenv("NARA_API_KEY", raising=False)
@@ -121,6 +131,5 @@ def test_detect_legacy_env_only_when_no_toml(isolated_home):
     (cwd / ".env").write_text("NARA_API_KEY=foo\n", encoding="utf-8")
     assert cfgmod.detect_legacy_env() == cwd / ".env"
 
-    cfgmod.write_config(api_key="x", output_dir=home / "out",
-                        target=home / "config.toml")
+    cfgmod.write_config(api_key="x", output_dir=home / "out", target=home / "config.toml")
     assert cfgmod.detect_legacy_env() is None

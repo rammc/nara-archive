@@ -1,4 +1,5 @@
 """Server smoke tests: routes resolve, SPA shell renders, no API key required."""
+
 from __future__ import annotations
 
 import pytest
@@ -25,6 +26,7 @@ def _config(tmp_path) -> Config:
 @pytest.fixture
 def client(tmp_path):
     from nara.server import create_app
+
     app = create_app(_config(tmp_path))
     return TestClient(app)
 
@@ -43,6 +45,7 @@ def test_health_reflects_missing_key(tmp_path):
     cfg = _config(tmp_path)
     cfg = Config(**{**cfg.__dict__, "api_key": None})
     from nara.server import create_app
+
     c = TestClient(create_app(cfg))
     body = c.get("/api/health").json()
     assert body["has_api_key"] is False

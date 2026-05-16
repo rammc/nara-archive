@@ -1,4 +1,5 @@
 """Phase 2: download every digital object referenced in metadata.json."""
+
 from __future__ import annotations
 
 import json
@@ -77,9 +78,7 @@ def download_all(
 
     if metadata is None:
         if not paths.metadata.exists():
-            raise FileNotFoundError(
-                f"{paths.metadata} not found — run `nara metadata` first."
-            )
+            raise FileNotFoundError(f"{paths.metadata} not found — run `nara metadata` first.")
         metadata = json.loads(paths.metadata.read_text(encoding="utf-8"))
 
     units = metadata.get("file_units", [])
@@ -98,15 +97,17 @@ def download_all(
         if progress_callback is None:
             return
         try:
-            progress_callback({
-                "phase": "downloading",
-                "current": files_done,
-                "total": total_objects,
-                "current_naid": str(unit.get("naid") or ""),
-                "current_filename": obj.get("filename"),
-                "status": status,
-                "bytes_downloaded": total_bytes_running,
-            })
+            progress_callback(
+                {
+                    "phase": "downloading",
+                    "current": files_done,
+                    "total": total_objects,
+                    "current_naid": str(unit.get("naid") or ""),
+                    "current_filename": obj.get("filename"),
+                    "status": status,
+                    "bytes_downloaded": total_bytes_running,
+                }
+            )
         except Exception:  # noqa: BLE001 — callback must never break the run
             log.exception("progress_callback raised; continuing")
 
@@ -114,10 +115,16 @@ def download_all(
         if cancel_event is not None and cancel_event.is_set():
             raise JobCancelled("download cancelled by user")
 
-    pbar_files = tqdm(total=total_objects, desc="files", unit="file",
-                      disable=not show_progress_bars)
-    pbar_bytes = tqdm(total=_known_bytes(units), desc="bytes", unit="B",
-                      unit_scale=True, disable=not show_progress_bars)
+    pbar_files = tqdm(
+        total=total_objects, desc="files", unit="file", disable=not show_progress_bars
+    )
+    pbar_bytes = tqdm(
+        total=_known_bytes(units),
+        desc="bytes",
+        unit="B",
+        unit_scale=True,
+        disable=not show_progress_bars,
+    )
     with pbar_files, pbar_bytes:
         for unit in units:
             _check_cancel()
@@ -170,8 +177,12 @@ def download_all(
                 pbar_files.update(1)
                 time.sleep(rate)
 
-    log.info("Download summary: downloaded=%d skipped=%d failed=%d",
-             counts["downloaded"], counts["skipped"], counts["failed"])
+    log.info(
+        "Download summary: downloaded=%d skipped=%d failed=%d",
+        counts["downloaded"],
+        counts["skipped"],
+        counts["failed"],
+    )
     return counts
 
 

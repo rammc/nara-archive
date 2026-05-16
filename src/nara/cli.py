@@ -1,4 +1,5 @@
 """Typer CLI for nara-archive."""
+
 from __future__ import annotations
 
 import json
@@ -30,10 +31,7 @@ app = typer.Typer(no_args_is_help=True, add_completion=False, help=__doc__)
 DEFAULT_PARENT_NAID = "7840517"
 # When unset, ``_bootstrap`` derives the output dir from ``resolve_config()``:
 # back-compat first (./output if it exists), then ~/.nara/output.
-OUTPUT_DIR_HELP = (
-    "Where to write artefacts. Defaults to ./output if present, "
-    "else ~/.nara/output."
-)
+OUTPUT_DIR_HELP = "Where to write artefacts. Defaults to ./output if present, else ~/.nara/output."
 
 # Module-level flag set by the Typer callback before any subcommand runs.
 # Per-command --verbose options OR the global --verbose flag both flip this on.
@@ -43,7 +41,9 @@ _state: dict[str, bool] = {"verbose": False}
 @app.callback()
 def _global_options(
     verbose: bool = typer.Option(
-        False, "--verbose", "-v",
+        False,
+        "--verbose",
+        "-v",
         help="DEBUG-level logging to console and file (applies to all subcommands).",
     ),
 ) -> None:
@@ -55,7 +55,7 @@ def _global_options(
 def _bootstrap(output_dir: Path | None = None, *, verbose: bool = False) -> OutputPaths:
     load_dotenv()
     cfg = resolve_config()
-    root = (output_dir if output_dir is not None else cfg.output_dir)
+    root = output_dir if output_dir is not None else cfg.output_dir
     paths = OutputPaths(root=Path(root).expanduser().resolve())
     paths.ensure()
     setup_logging(paths.run_log, verbose=verbose or _state["verbose"])
@@ -63,7 +63,8 @@ def _bootstrap(output_dir: Path | None = None, *, verbose: bool = False) -> Outp
     if legacy is not None and not cfg.config_path:
         get_logger().info(
             "found legacy .env at %s — consider running `nara init` to migrate to %s",
-            legacy, user_config_path(),
+            legacy,
+            user_config_path(),
         )
     return paths
 
@@ -91,7 +92,9 @@ def _resolve_metadata_path(paths: OutputPaths, metadata_file: Optional[Path]) ->
 
 @app.command()
 def metadata(
-    parent_naid: str = typer.Option(DEFAULT_PARENT_NAID, "--parent-naid", help="NAID of the parent record."),
+    parent_naid: str = typer.Option(
+        DEFAULT_PARENT_NAID, "--parent-naid", help="NAID of the parent record."
+    ),
     limit: int = typer.Option(300, "--limit", help="Max children to request."),
     output_dir: Optional[Path] = typer.Option(None, "--output-dir", help=OUTPUT_DIR_HELP),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="DEBUG logging."),
@@ -105,18 +108,23 @@ def metadata(
 @app.command()
 def filter(  # noqa: A001 — shadowing builtin is fine for a subcommand name
     query: str = typer.Option(..., "--query", "-q", help="Regex (case-insensitive)."),
-    name: str = typer.Option(..., "--name", "-n",
-                             help="Subset name; produces metadata-{name}.json."),
+    name: str = typer.Option(
+        ..., "--name", "-n", help="Subset name; produces metadata-{name}.json."
+    ),
     fields: str = typer.Option(
-        "title,scope_and_content_note", "--field", "--fields",
+        "title,scope_and_content_note",
+        "--field",
+        "--fields",
         help="Comma-separated field names to match against.",
     ),
     metadata_file: Optional[Path] = typer.Option(
-        None, "--metadata-file",
+        None,
+        "--metadata-file",
         help="Source metadata file. Defaults to output/metadata.json.",
     ),
-    force: bool = typer.Option(False, "--force/--no-force",
-                               help="Overwrite an existing metadata-{name}.json."),
+    force: bool = typer.Option(
+        False, "--force/--no-force", help="Overwrite an existing metadata-{name}.json."
+    ),
     output_dir: Optional[Path] = typer.Option(None, "--output-dir", help=OUTPUT_DIR_HELP),
     verbose: bool = typer.Option(False, "--verbose", "-v"),
 ) -> None:
@@ -152,16 +160,20 @@ def filter(  # noqa: A001 — shadowing builtin is fine for a subcommand name
         title = u.get("title") or ""
         if len(title) > 80:
             title = title[:77] + "..."
-        typer.echo(f"{str(u.get('naid') or ''):>12}  {u.get('digital_object_count', 0):>6}  {title}")
+        typer.echo(
+            f"{str(u.get('naid') or ''):>12}  {u.get('digital_object_count', 0):>6}  {title}"
+        )
 
 
 @app.command()
 def download(
     rate: float = typer.Option(1.0, "--rate", help="Seconds between requests."),
-    resume: bool = typer.Option(True, "--resume/--no-resume",
-                                help="Skip files whose size matches metadata."),
+    resume: bool = typer.Option(
+        True, "--resume/--no-resume", help="Skip files whose size matches metadata."
+    ),
     metadata_file: Optional[Path] = typer.Option(
-        None, "--metadata-file",
+        None,
+        "--metadata-file",
         help="Alternative metadata file (e.g. a subset from `nara filter`).",
     ),
     output_dir: Optional[Path] = typer.Option(None, "--output-dir", help=OUTPUT_DIR_HELP),
@@ -175,17 +187,18 @@ def download(
     client = _die_on_api_error(NaraClient)
     counts = _die_on_api_error(download_all, paths, rate=rate, client=client, metadata=meta)
     typer.echo(
-        f"downloaded={counts['downloaded']} skipped={counts['skipped']} "
-        f"failed={counts['failed']}"
+        f"downloaded={counts['downloaded']} skipped={counts['skipped']} failed={counts['failed']}"
     )
 
 
 @app.command("build-pdfs")
 def build_pdfs_cmd(
-    force: bool = typer.Option(False, "--force/--no-force",
-                               help="Rebuild PDFs even if output already exists."),
+    force: bool = typer.Option(
+        False, "--force/--no-force", help="Rebuild PDFs even if output already exists."
+    ),
     metadata_file: Optional[Path] = typer.Option(
-        None, "--metadata-file",
+        None,
+        "--metadata-file",
         help="Alternative metadata file (e.g. a subset from `nara filter`).",
     ),
     output_dir: Optional[Path] = typer.Option(None, "--output-dir", help=OUTPUT_DIR_HELP),
@@ -196,8 +209,7 @@ def build_pdfs_cmd(
     source = _resolve_metadata_path(paths, metadata_file)
     meta = json.loads(source.read_text(encoding="utf-8"))
     results = build_pdfs(paths, force=force, metadata=meta)
-    write_manifest(paths, metadata=meta, build_results=results,
-                   out_path=manifest_path_for(source))
+    write_manifest(paths, metadata=meta, build_results=results, out_path=manifest_path_for(source))
 
 
 @app.command()
@@ -206,7 +218,8 @@ def run(
     rate: float = typer.Option(1.0, "--rate"),
     limit: int = typer.Option(300, "--limit"),
     metadata_file: Optional[Path] = typer.Option(
-        None, "--metadata-file",
+        None,
+        "--metadata-file",
         help="If set, skip Phase 1 and run Phase 2+3 starting from this file.",
     ),
     output_dir: Optional[Path] = typer.Option(None, "--output-dir", help=OUTPUT_DIR_HELP),
@@ -223,14 +236,14 @@ def run(
         source = paths.metadata
     _die_on_api_error(download_all, paths, rate=rate, client=client, metadata=meta)
     results = build_pdfs(paths, metadata=meta)
-    write_manifest(paths, metadata=meta, build_results=results,
-                   out_path=manifest_path_for(source))
+    write_manifest(paths, metadata=meta, build_results=results, out_path=manifest_path_for(source))
 
 
 @app.command()
 def stats(
     metadata_file: Optional[Path] = typer.Option(
-        None, "--metadata-file",
+        None,
+        "--metadata-file",
         help="Alternative metadata file. Stats will prefer its sibling manifest.",
     ),
     output_dir: Optional[Path] = typer.Option(None, "--output-dir", help=OUTPUT_DIR_HELP),
@@ -259,8 +272,7 @@ def stats(
         log.info("%s present, %s missing.", source_meta.name, manifest.name)
         log.info("file_units=%d digital_objects=%d", len(units), objs)
     else:
-        log.info("No %s or %s yet — run `nara metadata` first.",
-                 source_meta.name, manifest.name)
+        log.info("No %s or %s yet — run `nara metadata` first.", source_meta.name, manifest.name)
 
     if paths.errors_log.exists():
         n = sum(1 for _ in paths.errors_log.open("r", encoding="utf-8"))
@@ -276,14 +288,14 @@ def stats(
         total_files = sum(len(v) for v in state.values())
         downloaded = sum(1 for v in state.values() for s in v.values() if s == "downloaded")
         failed = sum(1 for v in state.values() for s in v.values() if s == "failed")
-        log.info("state.json: tracked=%d downloaded=%d failed=%d",
-                 total_files, downloaded, failed)
+        log.info("state.json: tracked=%d downloaded=%d failed=%d", total_files, downloaded, failed)
 
 
 @app.command()
 def verify(
     metadata_file: Optional[Path] = typer.Option(
-        None, "--metadata-file",
+        None,
+        "--metadata-file",
         help="Verify the sibling manifest of this metadata file.",
     ),
     output_dir: Optional[Path] = typer.Option(None, "--output-dir", help=OUTPUT_DIR_HELP),
@@ -303,11 +315,13 @@ def verify(
 @app.command()
 def init(
     here: bool = typer.Option(
-        False, "--here",
+        False,
+        "--here",
         help="Write a project-local .env instead of ~/.nara/config.toml.",
     ),
     reset: bool = typer.Option(
-        False, "--reset",
+        False,
+        "--reset",
         help="Back up existing config and re-run the wizard.",
     ),
 ) -> None:
@@ -343,12 +357,15 @@ def init(
 @app.command()
 def serve(
     host: Optional[str] = typer.Option(
-        None, "--host",
+        None,
+        "--host",
         help="Bind host. Default 127.0.0.1 (local only). Use 0.0.0.0 to expose on LAN.",
     ),
     port: Optional[int] = typer.Option(None, "--port", help="Bind port. Default 8765."),
     no_browser: bool = typer.Option(
-        False, "--no-browser", help="Don't auto-open the browser.",
+        False,
+        "--no-browser",
+        help="Don't auto-open the browser.",
     ),
     output_dir: Optional[Path] = typer.Option(None, "--output-dir", help=OUTPUT_DIR_HELP),
 ) -> None:
@@ -358,8 +375,7 @@ def serve(
 
     if not cfg.has_api_key:
         typer.echo(
-            "error: no NARA API key found. Run `nara init` first "
-            "(or set NARA_API_KEY).",
+            "error: no NARA API key found. Run `nara init` first (or set NARA_API_KEY).",
             err=True,
         )
         raise typer.Exit(2)
@@ -382,8 +398,9 @@ def serve(
     url = f"http://{bind_host}:{bind_port}/"
     typer.echo(f"nara web UI → {url}")
 
-    open_browser = (cfg.auto_open_browser and not no_browser
-                    and bind_host in ("127.0.0.1", "localhost", "::1"))
+    open_browser = (
+        cfg.auto_open_browser and not no_browser and bind_host in ("127.0.0.1", "localhost", "::1")
+    )
     if open_browser:
         try:
             webbrowser.open(url, new=2)

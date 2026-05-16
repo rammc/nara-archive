@@ -1,4 +1,5 @@
 """Library routes: list local manifests, drill into one, search within."""
+
 from __future__ import annotations
 
 import json
@@ -64,9 +65,9 @@ def list_manifests(request: Request) -> LibraryListResponse:
     out = cfg.output_dir
     items: list[LibraryEntry] = []
     if out.exists():
-        for path in sorted(out.glob("manifest*.json"),
-                           key=lambda p: p.stat().st_mtime,
-                           reverse=True):
+        for path in sorted(
+            out.glob("manifest*.json"), key=lambda p: p.stat().st_mtime, reverse=True
+        ):
             doc = _load_manifest(path)
             if not doc:
                 continue
@@ -106,5 +107,4 @@ def search_manifest(
         note = u.get("scope_and_content_note") or ""
         if pattern.search(title) or pattern.search(note):
             matches.append(LibraryFileUnit(**u))
-    return LibrarySearchResponse(name=name, query=q,
-                                  total=len(matches), matches=matches)
+    return LibrarySearchResponse(name=name, query=q, total=len(matches), matches=matches)

@@ -1,4 +1,5 @@
 """Pydantic request/response models for the web API."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -44,6 +45,7 @@ class ChildrenResponse(BaseModel):
 
 # --- Jobs ---
 
+
 class JobCreate(BaseModel):
     parent_naid: str = Field(..., min_length=1)
     name: str | None = None
@@ -85,6 +87,7 @@ class JobListResponse(BaseModel):
 
 
 # --- Library ---
+
 
 class LibraryEntry(BaseModel):
     name: str
@@ -130,6 +133,7 @@ class LibrarySearchResponse(BaseModel):
 
 
 # --- Config ---
+
 
 class ConfigDto(BaseModel):
     has_api_key: bool

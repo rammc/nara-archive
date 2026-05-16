@@ -1,4 +1,5 @@
 """Build the final manifest.json from per-File-Unit build results."""
+
 from __future__ import annotations
 
 import json
@@ -30,33 +31,37 @@ def write_manifest(
         naid = str(unit.get("naid") or "")
         r = by_naid.get(naid)
         if not r:
-            file_units.append({
-                "naid": unit.get("naid"),
-                "title": unit.get("title"),
-                "slug": unit.get("slug"),
-                "scope_and_content_note": unit.get("scope_and_content_note"),
-                "inclusive_start_year": unit.get("inclusive_start_year"),
-                "inclusive_end_year": unit.get("inclusive_end_year"),
-                "pdf_path": None,
-                "pdf_size_bytes": 0,
-                "page_count": 0,
-                "source_object_count": unit.get("digital_object_count", 0),
-                "status": "missing",
-            })
+            file_units.append(
+                {
+                    "naid": unit.get("naid"),
+                    "title": unit.get("title"),
+                    "slug": unit.get("slug"),
+                    "scope_and_content_note": unit.get("scope_and_content_note"),
+                    "inclusive_start_year": unit.get("inclusive_start_year"),
+                    "inclusive_end_year": unit.get("inclusive_end_year"),
+                    "pdf_path": None,
+                    "pdf_size_bytes": 0,
+                    "page_count": 0,
+                    "source_object_count": unit.get("digital_object_count", 0),
+                    "status": "missing",
+                }
+            )
             continue
-        file_units.append({
-            "naid": r.get("naid"),
-            "title": r.get("title"),
-            "slug": r.get("slug"),
-            "scope_and_content_note": r.get("scope_and_content_note"),
-            "inclusive_start_year": r.get("inclusive_start_year"),
-            "inclusive_end_year": r.get("inclusive_end_year"),
-            "pdf_path": r.get("pdf_path"),
-            "pdf_size_bytes": r.get("pdf_size_bytes", 0),
-            "page_count": r.get("page_count", 0),
-            "source_object_count": r.get("source_object_count", 0),
-            "status": r.get("status", "ok"),
-        })
+        file_units.append(
+            {
+                "naid": r.get("naid"),
+                "title": r.get("title"),
+                "slug": r.get("slug"),
+                "scope_and_content_note": r.get("scope_and_content_note"),
+                "inclusive_start_year": r.get("inclusive_start_year"),
+                "inclusive_end_year": r.get("inclusive_end_year"),
+                "pdf_path": r.get("pdf_path"),
+                "pdf_size_bytes": r.get("pdf_size_bytes", 0),
+                "page_count": r.get("page_count", 0),
+                "source_object_count": r.get("source_object_count", 0),
+                "status": r.get("status", "ok"),
+            }
+        )
 
     stats = _compute_stats(file_units)
 

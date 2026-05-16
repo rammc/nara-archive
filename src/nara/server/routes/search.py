@@ -1,4 +1,5 @@
 """Discovery routes: proxy NARA search and record-detail lookups."""
+
 from __future__ import annotations
 
 import asyncio
