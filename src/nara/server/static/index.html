@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nara archive</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">nara</span>
+      <span class="brand-sub">archive</span>
+    </div>
+    <nav class="tabs" id="tab-nav" aria-label="primary">
+      <a href="#discovery"  data-tab="discovery">Discovery</a>
+      <a href="#downloads"  data-tab="downloads">Downloads</a>
+      <a href="#library"    data-tab="library">Library</a>
+      <a href="#settings"   data-tab="settings" class="tab-settings" aria-label="Settings">⚙</a>
+    </nav>
+  </header>
+
+  <main class="content">
+    <section id="discovery" class="tab-panel" hidden>
+      <h1>Discovery</h1>
+      <p class="muted">Live NARA Catalog search. Coming in the next patch — the API surface and tabs are in place.</p>
+    </section>
+    <section id="downloads" class="tab-panel" hidden>
+      <h1>Downloads</h1>
+      <p class="muted">In-flight bulk jobs with cancel / restart. Coming in the next patch.</p>
+    </section>
+    <section id="library" class="tab-panel" hidden>
+      <h1>Library</h1>
+      <p class="muted">Browse local manifests and read assembled PDFs side-by-side. Coming in the next patch.</p>
+    </section>
+    <section id="settings" class="tab-panel" hidden>
+      <h1>Settings</h1>
+      <dl class="kv">
+        <dt>Server</dt><dd id="kv-server">…</dd>
+        <dt>Version</dt><dd id="kv-version">…</dd>
+        <dt>API key</dt><dd id="kv-apikey">…</dd>
+        <dt>Output dir</dt><dd id="kv-output">…</dd>
+        <dt>Terms acknowledged</dt><dd id="kv-terms">…</dd>
+      </dl>
+      <p class="muted">Editable settings come with the Settings-tab patch.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span id="footer-server">localhost:0000</span>
+    <span>·</span>
+    <span id="footer-version">v0.0.0</span>
+    <span>·</span>
+    <a href="https://github.com/rammc/nara-archive" target="_blank" rel="noopener">GitHub</a>
+  </footer>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

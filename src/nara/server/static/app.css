@@ -1,0 +1,122 @@
+:root {
+  color-scheme: dark light;
+  --bg: #0f1115;
+  --bg-2: #161922;
+  --fg: #e8e6df;
+  --fg-dim: #8a8779;
+  --accent: #d97706;
+  --accent-fg: #1a1206;
+  --border: #2b2f3a;
+  --radius: 6px;
+  --maxw: 1100px;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+[data-theme="light"] {
+  --bg: #faf8f3;
+  --bg-2: #ffffff;
+  --fg: #1f1c14;
+  --fg-dim: #6a6657;
+  --border: #e3dfd1;
+  --accent-fg: #fff7eb;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-2);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.brand-mark {
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+}
+.brand-sub {
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.tabs {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+.tabs a {
+  color: var(--fg-dim);
+  text-decoration: none;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  border: 1px solid transparent;
+}
+.tabs a:hover { color: var(--fg); }
+.tabs a.active {
+  color: var(--accent);
+  border-color: var(--border);
+  background: var(--bg);
+}
+.tab-settings { font-size: 1.1rem; line-height: 1; }
+
+.content {
+  max-width: var(--maxw);
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  flex: 1;
+}
+
+.tab-panel[hidden] { display: none; }
+.tab-panel h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+.muted { color: var(--fg-dim); margin-top: 0; }
+
+.kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.4rem 1.5rem;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+}
+.kv dt { color: var(--fg-dim); }
+.kv dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 0.75rem 1.5rem;
+  color: var(--fg-dim);
+  font-size: 0.85rem;
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  background: var(--bg-2);
+}
+.footer a { color: inherit; }

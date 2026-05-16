@@ -1,7 +1,6 @@
 """Thin HTTP client for the NARA Catalog API v2."""
 from __future__ import annotations
 
-import os
 from typing import Any
 
 import requests
@@ -13,8 +12,11 @@ from tenacity import (
     wait_exponential,
 )
 
-API_BASE = "https://catalog.archives.gov/api/v2/"
-USER_AGENT = "nara-archive/0.1 (+https://github.com/)"
+from .config import DEFAULT_API_BASE_URL, resolve_config
+
+# Kept for back-compat with code that imports API_BASE from .api.
+API_BASE = DEFAULT_API_BASE_URL
+USER_AGENT = "nara-archive/0.1 (+https://github.com/rammc/nara-archive)"
 
 
 class NaraApiError(RuntimeError):
@@ -54,14 +56,17 @@ def _is_retryable(exc: BaseException) -> bool:
 class NaraClient:
     """Minimal client. Caller is responsible for rate-limiting between calls."""
 
-    def __init__(self, api_key: str | None = None, *, base: str = API_BASE, timeout: float = 30.0):
-        key = api_key or os.environ.get("NARA_API_KEY")
+    def __init__(self, api_key: str | None = None, *, base: str | None = None, timeout: float = 30.0):
+        cfg = resolve_config()
+        key = api_key or cfg.api_key
+        base_url = base or cfg.api_base_url
         if not key:
             raise NaraApiError(
-                "NARA_API_KEY is not set. Add it to .env or export it in your shell."
+                "NARA_API_KEY is not set. Run `nara init`, or export "
+                "NARA_API_KEY in your shell, or put it in a project-local .env."
             )
         self._key = key
-        self._base = base.rstrip("/") + "/"
+        self._base = base_url.rstrip("/") + "/"
         self._timeout = timeout
         self._session = requests.Session()
         self._session.headers.update(
