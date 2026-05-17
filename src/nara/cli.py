@@ -362,12 +362,30 @@ def presets(
         help="Output format: 'table' (rich) or 'json'.",
         case_sensitive=False,
     ),
+    show_path: bool = typer.Option(
+        False,
+        "--path",
+        help="Print the user presets file path (~/.nara/presets.json) and exit.",
+    ),
+    bundled_only: bool = typer.Option(
+        False,
+        "--bundled-only",
+        help="Ignore the user presets file; show only the shipped bundle.",
+    ),
 ) -> None:
-    """List curated starter searches (currently IG-Farben / WWII research focus)."""
-    from .presets import PresetError, load_presets
+    """List curated starter searches (bundled + optional user extensions)."""
+    from .presets import PresetError, load_all_presets, load_presets, user_presets_path
+
+    if show_path:
+        typer.echo(str(user_presets_path()))
+        return
 
     try:
-        data = load_presets()
+        data = (
+            [{**p, "source": "bundled"} for p in load_presets()]
+            if bundled_only
+            else load_all_presets()
+        )
     except PresetError as e:
         typer.echo(f"error: {e}", err=True)
         raise typer.Exit(1)
@@ -384,16 +402,23 @@ def presets(
     from rich.console import Console
     from rich.table import Table
 
-    table = Table(title=f"{len(data)} curated NARA presets", show_lines=True)
+    n_user = sum(1 for p in data if p.get("source") == "user")
+    title = f"{len(data)} NARA presets"
+    if n_user:
+        title += f" ({n_user} from your ~/.nara/presets.json)"
+    table = Table(title=title, show_lines=True)
     table.add_column("id", style="bold")
+    table.add_column("src", style="dim")
     table.add_column("category", style="cyan")
     table.add_column("title")
     table.add_column("direct NAID", style="green")
     table.add_column("RG", style="yellow")
     for p in data:
         rgs = ",".join((p.get("search") or {}).get("record_group") or [])
+        src = "user" if p.get("source") == "user" else "bundled"
         table.add_row(
             p["id"],
+            src,
             p["category"],
             p["title"],
             p.get("direct_naid") or "—",

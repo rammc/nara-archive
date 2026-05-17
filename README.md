@@ -421,12 +421,47 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development workflow.
 - Image recompression option (target ≤ 200 MB per File Unit at
   research-readable quality).
 - OCR pass with `ocrmypdf` for text-searchable output PDFs.
-- User-extensible presets via `~/.nara/presets.json`.
+- ~~User-extensible presets via `~/.nara/presets.json`.~~ ✓ Shipped — see
+  [Custom presets](#custom-presets).
 - Optional sibling tool against the AWS Open Data S3 mirror for
   full-archive workloads.
 
 Issues and feature requests welcome at
 <https://github.com/rammc/nara-archive/issues>.
+
+## Custom presets
+
+You can add your own starter searches without modifying the package.
+Create a file at `~/.nara/presets.json` (run `nara presets --path` to
+print the exact location) using the same shape as the bundled list:
+
+```json
+{
+  "presets": [
+    {
+      "id": "my-research-bayer",
+      "title": "Bayer Leverkusen — my project",
+      "description": "Starting points for the IG-Farben successor company.",
+      "category": "My research",
+      "search": {
+        "q": "Bayer Leverkusen",
+        "record_group": ["242", "260"]
+      },
+      "tags": ["bayer", "successor-firms"]
+    }
+  ]
+}
+```
+
+Rules:
+- New `id`s are appended to the end of the list.
+- An `id` that matches a bundled entry **overrides** it in-place.
+- The web UI tags user entries with a small "user" badge.
+- If the file is invalid JSON or fails validation, the web UI logs a
+  warning and falls back to bundled-only — your `~/.nara/presets.json`
+  never blanks the Starter-searches panel.
+- `nara presets` lists everything; `nara presets --bundled-only` skips
+  your file; `nara presets --path` prints the file location.
 
 ## Acknowledgments
 

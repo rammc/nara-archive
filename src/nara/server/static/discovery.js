@@ -351,13 +351,17 @@
     const groups = [];
     for (const [cat, items] of byCategory) {
       const chips = items
-        .map(
-          (p) => `<button type="button" class="preset-chip"
+        .map((p) => {
+          const userTag =
+            p.source === "user"
+              ? ` <span class="preset-source-tag" title="From your ~/.nara/presets.json">user</span>`
+              : "";
+          return `<button type="button" class="preset-chip"
             data-preset-id="${escapeHtml(p.id)}"
             title="${escapeHtml(p.description || "")}">
-            ${escapeHtml(p.title)}${p.direct_naid ? ` <span class="muted">· NAID ${escapeHtml(p.direct_naid)}</span>` : ""}
-          </button>`,
-        )
+            ${escapeHtml(p.title)}${p.direct_naid ? ` <span class="muted">· NAID ${escapeHtml(p.direct_naid)}</span>` : ""}${userTag}
+          </button>`;
+        })
         .join("");
       groups.push(
         `<div class="preset-group"><h4>${escapeHtml(cat)}</h4><div class="preset-chips">${chips}</div></div>`,

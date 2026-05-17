@@ -1,9 +1,14 @@
-"""Curated starter searches shipped with the package.
+"""Curated starter searches shipped with the package + user extensions.
 
-The presets file (``src/nara/data/presets.json``) is a fixed bundle of
+The bundled file (``src/nara/data/presets.json``) is a fixed list of
 hand-curated entry points into NARA's catalog — currently weighted toward
-IG-Farben / WWII war-crimes research. Adding entries requires editing the
-JSON; users don't override it from disk in this release.
+IG-Farben / WWII war-crimes research.
+
+Users can extend or override the bundle by placing a same-shape JSON file
+at ``~/.nara/presets.json``. An entry whose ``id`` matches a bundled one
+replaces the bundled entry in-place; new ids are appended. The loader
+tags each entry with ``source`` (``"bundled"`` or ``"user"``) so the UI
+can flag overrides.
 
 Each preset combines an optional ``search`` block (query + filters that the
 Discovery UI applies one-click) with an optional ``direct_naid`` shortcut for
@@ -94,3 +99,35 @@ def load_presets(*, path: Path | None = None) -> list[dict[str, Any]]:
         seen.add(validated["id"])
         out.append(validated)
     return out
+
+
+def user_presets_path() -> Path:
+    """Location of the optional user presets file (``~/.nara/presets.json``)."""
+    # Imported lazily to avoid a circular import on module load.
+    from .config import user_config_dir
+
+    return user_config_dir() / "presets.json"
+
+
+def load_all_presets(*, user_path: Path | None = None) -> list[dict[str, Any]]:
+    """Return bundled + user presets merged. User entries override bundled by id.
+
+    Each returned preset gets a ``source`` field (``"bundled"`` or ``"user"``).
+    Missing user file is fine — bundled-only is returned. A malformed user
+    file raises :class:`PresetError`; the caller decides whether to surface
+    the error or fall back to ``load_presets()``.
+    """
+    bundled = [{**p, "source": "bundled"} for p in load_presets()]
+    target = user_path if user_path is not None else user_presets_path()
+    if not target.exists():
+        return bundled
+    user = [{**p, "source": "user"} for p in load_presets(path=target)]
+    by_id = {p["id"]: p for p in bundled}
+    extras: list[dict[str, Any]] = []
+    for u in user:
+        if u["id"] in by_id:
+            by_id[u["id"]] = u  # override in place
+        else:
+            extras.append(u)
+    # Keep bundled order, then append user-only additions.
+    return [by_id[p["id"]] for p in bundled] + extras

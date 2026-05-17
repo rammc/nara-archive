@@ -183,6 +183,7 @@ class Preset(BaseModel):
     direct_naid: str | None = None
     filter_regex_hint: str | None = None
     tags: list[str] = Field(default_factory=list)
+    source: str | None = None  # "bundled" or "user"
 
 
 class PresetListResponse(BaseModel):
