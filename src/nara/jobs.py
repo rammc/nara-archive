@@ -76,6 +76,7 @@ class Job:
     created_at: str
     started_at: str | None = None
     completed_at: str | None = None
+    recompress: bool = False
     progress: JobProgress = field(default_factory=JobProgress)
     result: JobResult = field(default_factory=JobResult)
 
@@ -96,6 +97,7 @@ class Job:
             created_at=d["created_at"],
             started_at=d.get("started_at"),
             completed_at=d.get("completed_at"),
+            recompress=bool(d.get("recompress", False)),
             progress=progress,
             result=result,
         )
@@ -184,6 +186,7 @@ class JobManager:
         name: str | None = None,
         filter_query: str | None = None,
         rate: float | None = None,
+        recompress: bool = False,
     ) -> Job:
         if filter_query and not name:
             raise ValueError("name is required when filter_query is set")
@@ -197,6 +200,7 @@ class JobManager:
             rate=float(rate) if rate is not None else self._config.default_rate,
             status="queued",
             created_at=utc_now_iso(),
+            recompress=bool(recompress),
         )
         if not job.parent_naid:
             raise ValueError("parent_naid is required")
@@ -229,6 +233,7 @@ class JobManager:
             name=job.name,
             filter_query=job.filter_query,
             rate=job.rate,
+            recompress=job.recompress,
         )
 
     async def cancel(self, job_id: str) -> Job:
@@ -355,6 +360,7 @@ class JobManager:
                 self._runners["build_pdfs"],
                 paths,
                 metadata=metadata_for_phases,
+                recompress=job.recompress,
                 progress_callback=progress,
                 cancel_event=cancel_event,
                 show_progress_bars=False,

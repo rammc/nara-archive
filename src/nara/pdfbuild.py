@@ -10,7 +10,7 @@ from typing import Any, Callable, Literal
 
 import img2pdf
 import pypdf
-from PIL import Image
+from PIL import Image, ImageOps
 from tqdm import tqdm
 
 from .downloader import JobCancelled
@@ -23,6 +23,14 @@ SourceKind = Literal["image", "pdf", "skip"]
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".gif", ".bmp"}
 PDF_EXTS = {".pdf"}
 NON_DOCUMENT_EXTS = {".mp3", ".mp4", ".wav", ".m4a", ".mov", ".avi", ".aac", ".flac", ".ogg"}
+
+# Recompression defaults — sized for "readable on screen and printable at
+# letter size" rather than archival fidelity. NARA's reference scans tend
+# to be 4000-6000px wide at 300-600 DPI; 2400px / Q82 keeps detail for
+# typewritten and handwritten text while typically shrinking files 5-10x.
+RECOMPRESS_QUALITY = 82
+RECOMPRESS_MAX_DIM = 2400
+RECOMPRESS_SKIP_BELOW_BYTES = 200_000  # don't bother with already-small images
 
 
 def classify_source(path: Path) -> SourceKind:
@@ -67,21 +75,58 @@ def classify_source(path: Path) -> SourceKind:
     return "skip"
 
 
-def _convert_tiff_to_jpg(src: Path, work_dir: Path) -> Path:
+def _convert_tiff_to_jpg(src: Path, work_dir: Path, *, quality: int = 92) -> Path:
     """img2pdf rejects many real-world TIFFs; route them through Pillow→JPEG."""
     work_dir.mkdir(parents=True, exist_ok=True)
     out = work_dir / (src.stem + "__from-tiff.jpg")
     with Image.open(src) as img:
         if img.mode not in ("RGB", "L"):
             img = img.convert("RGB")
-        img.save(out, format="JPEG", quality=92)
+        img.save(out, format="JPEG", quality=quality)
     return out
 
 
-def _prepare_image(src: Path, work_dir: Path) -> Path:
-    """Return an img2pdf-friendly path for ``src``. May convert TIFFs."""
+def _recompress_to_jpeg(
+    src: Path,
+    work_dir: Path,
+    *,
+    quality: int = RECOMPRESS_QUALITY,
+    max_dim: int = RECOMPRESS_MAX_DIM,
+) -> Path:
+    """Re-encode ``src`` as a downsized, lower-quality JPEG. Always lossy."""
+    work_dir.mkdir(parents=True, exist_ok=True)
+    out = work_dir / (src.stem + "__recompressed.jpg")
+    with Image.open(src) as img:
+        img = ImageOps.exif_transpose(img)
+        if img.mode in ("RGBA", "P", "LA"):
+            img = img.convert("RGB")
+        elif img.mode not in ("RGB", "L"):
+            img = img.convert("RGB")
+        if max(img.size) > max_dim:
+            img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+        img.save(out, format="JPEG", quality=quality, optimize=True, progressive=True)
+    return out
+
+
+def _prepare_image(src: Path, work_dir: Path, *, recompress: bool = False) -> Path:
+    """Return an img2pdf-friendly path for ``src``. May convert TIFFs and/or
+    re-encode large JPEGs/PNGs into smaller JPEGs when ``recompress`` is set.
+    """
+    log = get_logger()
     suffix = src.suffix.lower()
-    if suffix in {".tif", ".tiff"}:
+    is_tiff = suffix in {".tif", ".tiff"}
+
+    if recompress:
+        # TIFFs are always re-encoded when recompress is on (they're huge).
+        # Other images skip recompression when already smaller than the threshold.
+        try:
+            if is_tiff or src.stat().st_size > RECOMPRESS_SKIP_BELOW_BYTES:
+                return _recompress_to_jpeg(src, work_dir)
+        except Exception as e:  # noqa: BLE001 — Pillow raises many types on weird inputs
+            log.warning("recompress failed for %s (%s) — falling back to original", src.name, e)
+            # fall through to the non-recompress path below
+
+    if is_tiff:
         try:
             # img2pdf can handle some TIFFs; try first to avoid lossy re-encode.
             with src.open("rb") as fh:
@@ -92,10 +137,19 @@ def _prepare_image(src: Path, work_dir: Path) -> Path:
     return src
 
 
-def assemble_pdf(sources: list[Path], out_path: Path, *, work_dir: Path) -> int:
+def assemble_pdf(
+    sources: list[Path],
+    out_path: Path,
+    *,
+    work_dir: Path,
+    recompress: bool = False,
+) -> int:
     """Assemble ``sources`` (in order) into a single PDF at ``out_path``.
 
-    Returns the page count of the resulting PDF.
+    Returns the page count of the resulting PDF. When ``recompress`` is set,
+    JPEGs/PNGs above 200 KB and all TIFFs are re-encoded as 2400px max,
+    quality-82 JPEGs before being fed to img2pdf — typically shrinks the
+    final PDF 5-10x with no perceptible loss for typewritten text.
     """
     out_path.parent.mkdir(parents=True, exist_ok=True)
     work_dir.mkdir(parents=True, exist_ok=True)
@@ -106,7 +160,7 @@ def assemble_pdf(sources: list[Path], out_path: Path, *, work_dir: Path) -> int:
     def _flush_images() -> None:
         if not images_run:
             return
-        prepared = [_prepare_image(p, work_dir) for p in images_run]
+        prepared = [_prepare_image(p, work_dir, recompress=recompress) for p in images_run]
         partial = work_dir / f"images-{len(parts):03d}.pdf"
         with partial.open("wb") as fh:
             fh.write(img2pdf.convert([str(p) for p in prepared]))
@@ -162,6 +216,7 @@ def build_pdfs(
     paths: OutputPaths,
     *,
     force: bool = False,
+    recompress: bool = False,
     metadata: dict | None = None,
     progress_callback: ProgressCallback | None = None,
     cancel_event: threading.Event | None = None,
@@ -171,7 +226,10 @@ def build_pdfs(
 
     Cancel/progress hooks mirror :func:`download_all`. Cancellation is checked
     *between* File Units — a unit already mid-build runs to completion to keep
-    the on-disk state clean.
+    the on-disk state clean. When ``recompress=True``, source images are
+    downsized/re-encoded before PDF assembly to keep output sizes manageable.
+    Note: existing PDFs are still skipped unless ``force=True`` — if you turn
+    recompression on after an initial build, also pass ``--force`` to rebuild.
     """
     import json
 
@@ -265,12 +323,14 @@ def build_pdfs(
             _emit(seq, naid, "ok", page_count)
             continue
 
+        source_size_total = sum(p.stat().st_size for (p, _o) in ordered if p.exists())
         with tempfile.TemporaryDirectory(prefix=f"nara-{naid}-") as work:
             try:
                 page_count = assemble_pdf(
                     [p for (p, _o) in ordered],
                     out_path,
                     work_dir=Path(work),
+                    recompress=recompress,
                 )
             except Exception as e:  # noqa: BLE001
                 log.exception("naid=%s assemble failed: %s", naid, e)
@@ -294,10 +354,28 @@ def build_pdfs(
         size = out_path.stat().st_size
         results.append(
             _result_row(
-                unit, seq, status="ok", pdf_path=out_path, pdf_size=size, page_count=page_count
+                unit,
+                seq,
+                status="ok",
+                pdf_path=out_path,
+                pdf_size=size,
+                page_count=page_count,
+                source_size_bytes=source_size_total,
             )
         )
-        log.info("naid=%s built %s pages=%d size=%d", naid, out_path.name, page_count, size)
+        if recompress and source_size_total > 0:
+            ratio = size / source_size_total
+            log.info(
+                "naid=%s built %s pages=%d size=%d (recompressed: %.2fx of %d source bytes)",
+                naid,
+                out_path.name,
+                page_count,
+                size,
+                ratio,
+                source_size_total,
+            )
+        else:
+            log.info("naid=%s built %s pages=%d size=%d", naid, out_path.name, page_count, size)
         _emit(seq, naid, "ok", page_count)
 
     return results
@@ -325,6 +403,7 @@ def _result_row(
     pdf_size: int,
     page_count: int,
     reason: str | None = None,
+    source_size_bytes: int | None = None,
 ) -> dict:
     return {
         "seq": seq,
@@ -340,6 +419,7 @@ def _result_row(
         "source_object_count": unit.get("digital_object_count", 0),
         "status": status,
         **({"reason": reason} if reason else {}),
+        **({"source_size_bytes": source_size_bytes} if source_size_bytes is not None else {}),
     }
 
 

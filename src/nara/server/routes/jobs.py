@@ -32,6 +32,7 @@ async def create_job(body: JobCreate, request: Request) -> JobDto:
             name=body.name,
             filter_query=body.filter_query,
             rate=body.rate,
+            recompress=body.recompress,
         )
     except ValueError as e:
         raise HTTPException(400, str(e)) from e

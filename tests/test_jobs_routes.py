@@ -51,6 +51,7 @@ def _runners():
         *,
         metadata,
         force=False,
+        recompress=False,
         progress_callback=None,
         cancel_event=None,
         show_progress_bars=False,

@@ -98,6 +98,13 @@
             <label for="job-rate">Rate (seconds between requests)</label>
             <input id="job-rate" type="number" min="0.1" max="60" step="0.1" value="0.5">
           </div>
+          <div class="field">
+            <label class="checkbox">
+              <input id="job-recompress" type="checkbox">
+              Recompress images during PDF assembly
+            </label>
+            <p class="field-hint muted">Re-encodes JPEGs/TIFFs at quality 82 and max 2400 px. Typically shrinks output PDFs 5–10×. Off by default to preserve archival fidelity.</p>
+          </div>
           <div class="actions">
             <button type="button" data-dismiss>Cancel</button>
             <button type="submit" class="btn-primary">Start job</button>

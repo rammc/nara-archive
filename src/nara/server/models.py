@@ -55,6 +55,7 @@ class JobCreate(BaseModel):
     name: str | None = None
     filter_query: str | None = None
     rate: float | None = Field(default=None, gt=0, le=60)
+    recompress: bool = False
 
 
 class JobProgressDto(BaseModel):
@@ -82,6 +83,7 @@ class JobDto(BaseModel):
     created_at: str
     started_at: str | None = None
     completed_at: str | None = None
+    recompress: bool = False
     progress: JobProgressDto = Field(default_factory=JobProgressDto)
     result: JobResultDto = Field(default_factory=JobResultDto)
 

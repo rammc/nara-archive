@@ -196,6 +196,13 @@ def build_pdfs_cmd(
     force: bool = typer.Option(
         False, "--force/--no-force", help="Rebuild PDFs even if output already exists."
     ),
+    recompress: bool = typer.Option(
+        False,
+        "--recompress",
+        help="Re-encode large source images (JPEG Q82, max 2400px) before PDF "
+        "assembly. Typically shrinks output 5-10x. Pair with --force to rebuild "
+        "existing PDFs.",
+    ),
     metadata_file: Optional[Path] = typer.Option(
         None,
         "--metadata-file",
@@ -208,7 +215,7 @@ def build_pdfs_cmd(
     paths = _bootstrap(output_dir, verbose=verbose)
     source = _resolve_metadata_path(paths, metadata_file)
     meta = json.loads(source.read_text(encoding="utf-8"))
-    results = build_pdfs(paths, force=force, metadata=meta)
+    results = build_pdfs(paths, force=force, recompress=recompress, metadata=meta)
     write_manifest(paths, metadata=meta, build_results=results, out_path=manifest_path_for(source))
 
 
@@ -217,6 +224,11 @@ def run(
     parent_naid: str = typer.Option(DEFAULT_PARENT_NAID, "--parent-naid"),
     rate: float = typer.Option(1.0, "--rate"),
     limit: int = typer.Option(300, "--limit"),
+    recompress: bool = typer.Option(
+        False,
+        "--recompress",
+        help="Recompress source images during Phase 3 (see `build-pdfs --help`).",
+    ),
     metadata_file: Optional[Path] = typer.Option(
         None,
         "--metadata-file",
@@ -235,7 +247,7 @@ def run(
         meta = _die_on_api_error(fetch_and_persist, parent_naid, paths, limit=limit, client=client)
         source = paths.metadata
     _die_on_api_error(download_all, paths, rate=rate, client=client, metadata=meta)
-    results = build_pdfs(paths, metadata=meta)
+    results = build_pdfs(paths, recompress=recompress, metadata=meta)
     write_manifest(paths, metadata=meta, build_results=results, out_path=manifest_path_for(source))
 
 

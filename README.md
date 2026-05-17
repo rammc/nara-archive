@@ -418,8 +418,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development workflow.
 
 ## Roadmap
 
-- Image recompression option (target ≤ 200 MB per File Unit at
-  research-readable quality).
+- ~~Image recompression option.~~ ✓ Shipped — see [Recompression](#recompression).
 - OCR pass with `ocrmypdf` for text-searchable output PDFs.
 - ~~User-extensible presets via `~/.nara/presets.json`.~~ ✓ Shipped — see
   [Custom presets](#custom-presets).
@@ -428,6 +427,34 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development workflow.
 
 Issues and feature requests welcome at
 <https://github.com/rammc/nara-archive/issues>.
+
+## Recompression
+
+NARA serves reference scans at archival fidelity — 6 MB JPEGs and 50 MB
+TIFFs per page are common, so a single File Unit can produce a 400 MB+
+PDF. Opt-in **recompression** re-encodes source images during Phase 3 to
+get research-readable output at a fraction of the size.
+
+What it does:
+- Re-encodes JPEGs (and converts TIFFs) at **JPEG quality 82**, downsized
+  to **max 2400 px**. Typical reduction: 5–10× for typewritten material.
+- Skips images already smaller than 200 KB — no point re-encoding.
+- Original sources on disk under `raw/` are **never touched**; only the
+  intermediate copies fed to img2pdf are recompressed. You can rebuild
+  at archival quality any time by re-running without `--recompress`.
+
+How to use it:
+
+```bash
+# CLI
+nara build-pdfs --recompress --force        # --force needed to rebuild existing
+nara run --recompress --parent-naid 12345
+
+# Web UI: Discovery → Download → tick "Recompress images during PDF assembly"
+```
+
+When to skip it: if you need bit-perfect reproductions for citation or
+publication, leave it off — the default passes scans through verbatim.
 
 ## Custom presets
 

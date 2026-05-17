@@ -397,6 +397,7 @@
   const jobNameInput = $("#job-name");
   const jobFilterInput = $("#job-filter");
   const jobRateInput = $("#job-rate");
+  const jobRecompressInput = $("#job-recompress");
   const jobSub = $("#job-dialog-sub");
 
   function slugifyClient(s) {
@@ -413,6 +414,7 @@
     jobNameInput.value = slugifyClient(title) || `naid-${naid}`;
     jobFilterInput.value = "";
     jobRateInput.value = "0.5";
+    if (jobRecompressInput) jobRecompressInput.checked = false;
     jobSub.textContent = `Parent NAID ${naid}${title ? ` · ${title.slice(0, 80)}` : ""}`;
     jobDialog.showModal();
   }
@@ -432,6 +434,7 @@
       name: jobNameInput.value.trim(),
       filter_query: jobFilterInput.value.trim() || null,
       rate: parseFloat(jobRateInput.value) || 0.5,
+      recompress: !!(jobRecompressInput && jobRecompressInput.checked),
     };
     try {
       const r = await fetch("/api/jobs", {

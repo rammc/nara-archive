@@ -118,6 +118,7 @@ def _fake_runners(
         *,
         metadata,
         force=False,
+        recompress=False,
         progress_callback=None,
         cancel_event=None,
         show_progress_bars=False,
@@ -232,6 +233,44 @@ async def _test_filter_zero(tmp_path):
         finished = mgr.get(job.job_id)
         assert finished.status == "failed"
         assert any("0/" in e for e in finished.result.errors)
+    finally:
+        await mgr.shutdown()
+
+
+def test_recompress_flag_flows_from_create_to_build_runner(tmp_path):
+    """JobManager.create(recompress=True) → build_pdfs runner receives recompress=True."""
+    asyncio.run(_test_recompress_flag(tmp_path))
+
+
+async def _test_recompress_flag(tmp_path):
+    captured: dict[str, bool] = {}
+
+    def captured_build_pdfs(
+        paths,
+        *,
+        metadata,
+        force=False,
+        recompress=False,
+        progress_callback=None,
+        cancel_event=None,
+        show_progress_bars=False,
+    ):
+        captured["recompress"] = recompress
+        return [{"naid": "U", "status": "ok", "pdf_path": "pdfs/x.pdf"}]
+
+    runners = _fake_runners()
+    runners["build_pdfs"] = captured_build_pdfs
+
+    mgr = JobManager(config=_config(tmp_path), runners=runners)
+    await mgr.startup()
+    try:
+        job = await mgr.create(parent_naid="P", recompress=True)
+        await _wait_for(lambda: mgr.get(job.job_id).status == "done")
+        assert captured["recompress"] is True
+        # And restart preserves the flag.
+        restarted = await mgr.restart(job.job_id)
+        await _wait_for(lambda: mgr.get(restarted.job_id).status == "done")
+        assert captured["recompress"] is True
     finally:
         await mgr.shutdown()
 

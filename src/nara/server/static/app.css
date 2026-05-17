@@ -455,6 +455,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .job-dialog h2 { margin: 0 0 0.5rem; }
 .job-dialog .field { display: flex; flex-direction: column; gap: 0.25rem; margin: 0.6rem 0; }
 .job-dialog .field label { font-size: 0.85rem; color: var(--fg-dim); }
+.job-dialog .field label.checkbox { display: flex; gap: 0.4rem; align-items: center; color: var(--fg); font-size: 0.95rem; }
+.job-dialog .field-hint { margin: 0 0 0 1.4rem; font-size: 0.75rem; line-height: 1.4; }
 .job-dialog input[type="text"],
 .job-dialog input[type="number"] {
   background: var(--bg);
