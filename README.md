@@ -35,7 +35,13 @@ you can spend time reading the records, not glueing JSON together.
   progress, cancel/restart, inline PDF list, "Reveal in Finder"), Library
   (manifests with in-browser PDF preview), Settings (masked key, editable rate).
 - **Curated starter searches** (`nara presets`) — 8 hand-picked entry points
-  for IG Farben / WWII industrial / Nuremberg-trials research.
+  for IG Farben / WWII industrial / Nuremberg-trials research, plus your own
+  via [`~/.nara/presets.json`](#custom-presets).
+- **Optional image recompression** ([`--recompress`](#recompression)) —
+  shrinks output PDFs 5–10× while keeping typewritten text readable.
+- **Optional OCR text layer** ([`--ocr`](#ocr)) — searchable PDFs via
+  ocrmypdf + Tesseract; defaults to English + German for the captured-records
+  corpus.
 - **Leaf-record fallback** — if you select a single-record NAID with its own
   digital objects, the pipeline treats it as a one-file-unit job rather than
   failing silently.
@@ -353,11 +359,15 @@ against the 10k API quota.
 This is a single-user research tool, not an archive-grade preservation
 suite. Out of scope (intentionally):
 
-- **No OCR / full-text search inside PDFs.** Titles and scope notes are
-  searchable; PDF body content is not.
-- **No image recompression.** Source TIFFs and 6 MB JPGs are passed
-  through verbatim into the assembled PDF. Expect roughly 1.5 TB for a
-  full 255k-object Series.
+- **No full-text search across your local library.** Per-manifest title
+  and scope-note search exists; cross-manifest search and full-text
+  search across OCR'd body content are not built in. (Drop the resulting
+  PDFs into Spotlight, recoll, or Zotero if you want that.)
+- **Source images are passed through verbatim by default.** TIFFs and
+  6 MB reference JPEGs land in the output PDF as-is unless you turn on
+  `--recompress` ([see Recompression](#recompression)). The default
+  preserves archival fidelity; expect roughly 1.5 TB for a full
+  255k-object Series.
 - **No multi-user accounts, no cloud sync, no telemetry.** The server
   binds to `127.0.0.1` by default; nothing leaves your machine.
 
@@ -390,11 +400,26 @@ directory, the CLI uses it instead of `~/.nara/output/`.
 ## CLI cheat sheet
 
 ```bash
+# Discovery + presets
 nara presets                                  # curated starter searches
+nara presets --path                           # print ~/.nara/presets.json location
+nara presets --bundled-only                   # ignore your custom presets file
+
+# Three-phase pipeline
 nara metadata --parent-naid 7840517           # Phase 1: fetch + normalize metadata
 nara filter --query "I\.?G\.?\s*Farben" --name igfarben
 nara download --metadata-file output/metadata-igfarben.json --rate 0.5
 nara build-pdfs --metadata-file output/metadata-igfarben.json
+
+# Build with size reduction and/or OCR
+nara build-pdfs --recompress --force          # 5–10× smaller PDFs
+nara build-pdfs --ocr --ocr-language eng+deu  # searchable text layer
+nara build-pdfs --recompress --ocr --force    # both — recommended combo
+
+# End-to-end shortcut
+nara run --parent-naid 7840517 --recompress --ocr
+
+# Maintenance
 nara stats                                    # counts + error summary
 nara verify                                   # check manifest entries vs. disk
 nara serve                                    # local web UI
