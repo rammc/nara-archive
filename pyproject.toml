@@ -46,6 +46,11 @@ dev = [
 keyring = [
     "keyring>=24.0",
 ]
+ocr = [
+    # Adds an OCR layer to assembled PDFs. Requires the Tesseract binary to
+    # be installed externally (brew install tesseract / apt install tesseract-ocr).
+    "ocrmypdf>=15.0",
+]
 
 [project.scripts]
 nara = "nara.cli:app"

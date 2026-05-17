@@ -203,6 +203,18 @@ def build_pdfs_cmd(
         "assembly. Typically shrinks output 5-10x. Pair with --force to rebuild "
         "existing PDFs.",
     ),
+    ocr: bool = typer.Option(
+        False,
+        "--ocr",
+        help="Add a searchable text layer to each assembled PDF via ocrmypdf "
+        "(requires Tesseract; see README).",
+    ),
+    ocr_language: str = typer.Option(
+        "eng+deu",
+        "--ocr-language",
+        help="Tesseract language pack(s), '+' separated. Default eng+deu for "
+        "the German-heavy NARA captured-records corpus.",
+    ),
     metadata_file: Optional[Path] = typer.Option(
         None,
         "--metadata-file",
@@ -215,7 +227,23 @@ def build_pdfs_cmd(
     paths = _bootstrap(output_dir, verbose=verbose)
     source = _resolve_metadata_path(paths, metadata_file)
     meta = json.loads(source.read_text(encoding="utf-8"))
-    results = build_pdfs(paths, force=force, recompress=recompress, metadata=meta)
+    try:
+        results = build_pdfs(
+            paths,
+            force=force,
+            recompress=recompress,
+            ocr=ocr,
+            ocr_language=ocr_language,
+            metadata=meta,
+        )
+    except Exception as e:
+        # OCR dep errors and similar — print clean message, don't dump a stack.
+        from .pdfbuild import OcrDependencyError
+
+        if isinstance(e, OcrDependencyError):
+            typer.echo(f"error: {e}", err=True)
+            raise typer.Exit(2) from e
+        raise
     write_manifest(paths, metadata=meta, build_results=results, out_path=manifest_path_for(source))
 
 
@@ -228,6 +256,16 @@ def run(
         False,
         "--recompress",
         help="Recompress source images during Phase 3 (see `build-pdfs --help`).",
+    ),
+    ocr: bool = typer.Option(
+        False,
+        "--ocr",
+        help="Add an OCR text layer to each assembled PDF (requires Tesseract).",
+    ),
+    ocr_language: str = typer.Option(
+        "eng+deu",
+        "--ocr-language",
+        help="Tesseract language pack(s), '+' separated.",
     ),
     metadata_file: Optional[Path] = typer.Option(
         None,
@@ -247,7 +285,21 @@ def run(
         meta = _die_on_api_error(fetch_and_persist, parent_naid, paths, limit=limit, client=client)
         source = paths.metadata
     _die_on_api_error(download_all, paths, rate=rate, client=client, metadata=meta)
-    results = build_pdfs(paths, recompress=recompress, metadata=meta)
+    try:
+        results = build_pdfs(
+            paths,
+            recompress=recompress,
+            ocr=ocr,
+            ocr_language=ocr_language,
+            metadata=meta,
+        )
+    except Exception as e:
+        from .pdfbuild import OcrDependencyError
+
+        if isinstance(e, OcrDependencyError):
+            typer.echo(f"error: {e}", err=True)
+            raise typer.Exit(2) from e
+        raise
     write_manifest(paths, metadata=meta, build_results=results, out_path=manifest_path_for(source))
 
 

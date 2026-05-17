@@ -52,6 +52,8 @@ def _runners():
         metadata,
         force=False,
         recompress=False,
+        ocr=False,
+        ocr_language="eng+deu",
         progress_callback=None,
         cancel_event=None,
         show_progress_bars=False,

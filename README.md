@@ -419,7 +419,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development workflow.
 ## Roadmap
 
 - ~~Image recompression option.~~ ✓ Shipped — see [Recompression](#recompression).
-- OCR pass with `ocrmypdf` for text-searchable output PDFs.
+- ~~OCR pass with `ocrmypdf`.~~ ✓ Shipped — see [OCR](#ocr).
 - ~~User-extensible presets via `~/.nara/presets.json`.~~ ✓ Shipped — see
   [Custom presets](#custom-presets).
 - Optional sibling tool against the AWS Open Data S3 mirror for
@@ -455,6 +455,60 @@ nara run --recompress --parent-naid 12345
 
 When to skip it: if you need bit-perfect reproductions for citation or
 publication, leave it off — the default passes scans through verbatim.
+
+## OCR
+
+NARA serves image-only PDFs and JPEGs — you can read them but you can't
+search the text inside. Opt-in **OCR** adds a searchable text layer to
+each assembled PDF via [ocrmypdf](https://github.com/ocrmypdf/OCRmyPDF)
++ [Tesseract](https://github.com/tesseract-ocr/tesseract).
+
+### One-time setup
+
+OCR is an optional extra because it pulls in heavy external dependencies.
+Install both the Python package and the system Tesseract binary:
+
+```bash
+# 1. Add ocrmypdf to your pipx-installed nara-archive
+pipx inject nara-archive ocrmypdf
+
+# 2. Install Tesseract + the language packs you want
+# macOS:
+brew install tesseract tesseract-lang   # tesseract-lang ships eng+deu+more
+# Debian / Ubuntu:
+sudo apt install tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng
+# Windows:
+# Download the installer from https://github.com/UB-Mannheim/tesseract/wiki
+# and check the German + English language data during install.
+```
+
+### Using it
+
+```bash
+# CLI — pair with --recompress for the smallest searchable PDFs
+nara build-pdfs --ocr --recompress --force
+nara run --ocr --ocr-language eng+deu --parent-naid 12345
+
+# Web UI: Discovery → Download → tick "Add OCR text layer to assembled PDFs"
+# A language input appears (default eng+deu — Tesseract codes, '+' separated)
+```
+
+### Notes
+
+- **Default language is `eng+deu`** — the IG-Farben / NARA captured-German
+  corpus that motivated this tool is mostly bilingual. Tune via
+  `--ocr-language` (e.g. `eng+deu+fra`, `lat`, `nld`).
+- **Skip-text mode** is on by default — pages that already contain text
+  (rare for NARA scans but common for native PDFs) are kept as-is.
+- **OCR is slow** — expect 3–15 seconds per page on a typical laptop.
+  For a 100-page File Unit, plan for several minutes per PDF. Run
+  overnight for bulk jobs.
+- **Original sources under `raw/` are never touched.** The OCR pass
+  rewrites the assembled PDF in place via a temp-and-rename, so a
+  partial OCR run can never corrupt the file you already have.
+- **Missing dependency = clean error.** If you turn on `--ocr` without
+  ocrmypdf or Tesseract installed, the tool exits with a one-line
+  install hint instead of a stack trace.
 
 ## Custom presets
 
@@ -515,6 +569,8 @@ to all of their maintainers.
 | [Pydantic](https://github.com/pydantic/pydantic) | API DTOs and validation | MIT |
 | [uvicorn](https://github.com/encode/uvicorn) | ASGI server | BSD-3-Clause |
 | [keyring](https://github.com/jaraco/keyring) *(optional)* | OS-keyring storage for the API key | MIT |
+| [ocrmypdf](https://github.com/ocrmypdf/OCRmyPDF) *(optional, `[ocr]` extra)* | Adds a searchable text layer to assembled PDFs | MPL-2.0 |
+| [Tesseract](https://github.com/tesseract-ocr/tesseract) *(external binary, required by `[ocr]`)* | OCR engine that backs ocrmypdf | Apache-2.0 |
 
 **Development & build**
 

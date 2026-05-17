@@ -5,14 +5,18 @@ from __future__ import annotations
 from pathlib import Path
 
 import pypdf
+import pytest
 from PIL import Image
 
 from nara.pdfbuild import (
+    DEFAULT_OCR_LANGUAGE,
     RECOMPRESS_MAX_DIM,
     RECOMPRESS_QUALITY,
+    OcrDependencyError,
     _recompress_to_jpeg,
     assemble_pdf,
     classify_source,
+    ocr_pdf_in_place,
 )
 
 
@@ -117,6 +121,81 @@ def test_recompress_uses_default_quality(tmp_path):
         img.verify()
     # Quality constant exposed so power users can tune.
     assert 50 <= RECOMPRESS_QUALITY <= 95
+
+
+# --- OCR (roadmap #2) ---
+
+
+def test_default_ocr_language_is_english_plus_german():
+    """eng+deu is the right default for the NARA captured-German corpus."""
+    assert "eng" in DEFAULT_OCR_LANGUAGE and "deu" in DEFAULT_OCR_LANGUAGE
+
+
+def test_ocr_pdf_in_place_raises_clear_error_without_ocrmypdf(tmp_path, monkeypatch):
+    """When ocrmypdf isn't importable, we raise OcrDependencyError with install hints."""
+    import sys
+
+    # Force the import inside ocr_pdf_in_place to fail.
+    monkeypatch.setitem(sys.modules, "ocrmypdf", None)
+    fake_pdf = tmp_path / "x.pdf"
+    fake_pdf.write_bytes(b"%PDF-1.4 fake content")
+    with pytest.raises(OcrDependencyError, match="ocrmypdf"):
+        ocr_pdf_in_place(fake_pdf)
+
+
+def test_ocr_pdf_in_place_calls_ocrmypdf_with_language(tmp_path, monkeypatch):
+    """ocrmypdf.ocr is invoked with the requested language, output atomically replaces input."""
+    import sys
+    import types
+
+    captured: dict = {}
+
+    def fake_ocr(in_path, out_path, **kwargs):
+        captured["in"] = in_path
+        captured["out"] = out_path
+        captured["kwargs"] = kwargs
+        # Simulate ocrmypdf producing the output file.
+        from pathlib import Path as P
+
+        P(out_path).write_bytes(b"%PDF-1.4 ocr'd")
+
+    fake_module = types.ModuleType("ocrmypdf")
+    fake_module.ocr = fake_ocr  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "ocrmypdf", fake_module)
+
+    pdf = tmp_path / "doc.pdf"
+    pdf.write_bytes(b"%PDF-1.4 original")
+    ocr_pdf_in_place(pdf, language="deu+fra")
+
+    assert captured["kwargs"]["language"] == "deu+fra"
+    assert captured["kwargs"]["skip_text"] is True
+    # Atomic replacement landed.
+    assert pdf.read_bytes() == b"%PDF-1.4 ocr'd"
+    # Temp file is gone.
+    assert not (tmp_path / "doc.pdf.ocr.tmp").exists()
+
+
+def test_ocr_pdf_in_place_tesseract_missing_is_dep_error(tmp_path, monkeypatch):
+    """If ocrmypdf raises a Tesseract-shaped error, we wrap it as OcrDependencyError."""
+    import sys
+    import types
+
+    class FakeMissingDep(Exception):
+        pass
+
+    def fake_ocr(in_path, out_path, **kwargs):
+        raise FakeMissingDep("tesseract not found on $PATH")
+
+    fake_module = types.ModuleType("ocrmypdf")
+    fake_module.ocr = fake_ocr  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "ocrmypdf", fake_module)
+
+    pdf = tmp_path / "x.pdf"
+    pdf.write_bytes(b"%PDF-1.4")
+    with pytest.raises(OcrDependencyError, match="Tesseract"):
+        ocr_pdf_in_place(pdf)
+    # Original PDF stays intact when OCR fails.
+    assert pdf.read_bytes() == b"%PDF-1.4"
 
 
 def test_assemble_pdf_with_recompress_produces_smaller_output(tmp_path):

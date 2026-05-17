@@ -32,6 +32,14 @@ RECOMPRESS_QUALITY = 82
 RECOMPRESS_MAX_DIM = 2400
 RECOMPRESS_SKIP_BELOW_BYTES = 200_000  # don't bother with already-small images
 
+# Default OCR languages. eng+deu covers the IG-Farben / NARA captured-German
+# corpus that motivated this tool; tune via --ocr-language for other material.
+DEFAULT_OCR_LANGUAGE = "eng+deu"
+
+
+class OcrDependencyError(RuntimeError):
+    """Raised when --ocr is requested but ocrmypdf or Tesseract is unavailable."""
+
 
 def classify_source(path: Path) -> SourceKind:
     """Decide how a file participates in PDF assembly.
@@ -137,6 +145,49 @@ def _prepare_image(src: Path, work_dir: Path, *, recompress: bool = False) -> Pa
     return src
 
 
+def ocr_pdf_in_place(pdf_path: Path, *, language: str = DEFAULT_OCR_LANGUAGE) -> None:
+    """Add an OCR text layer to ``pdf_path`` in place. Idempotent: pages that
+    already contain text are passed through unchanged (``skip_text=True``).
+
+    Raises :class:`OcrDependencyError` if ocrmypdf or Tesseract are missing —
+    callers should surface that as a job failure rather than a stack trace.
+    """
+    try:
+        import ocrmypdf  # type: ignore[import-not-found]
+    except ImportError as e:
+        raise OcrDependencyError(
+            "OCR requested but ocrmypdf is not installed. "
+            "Install the extra with `pipx inject nara-archive ocrmypdf` "
+            "(or `pip install 'nara-archive[ocr]'`). "
+            "You also need Tesseract on the system: `brew install tesseract` "
+            "on macOS, `apt install tesseract-ocr tesseract-ocr-deu` on Debian/Ubuntu."
+        ) from e
+
+    # Write to a sibling temp file then atomic rename so a partial OCR run
+    # never replaces the assembled PDF with a corrupt one.
+    tmp = pdf_path.with_name(pdf_path.name + ".ocr.tmp")
+    try:
+        ocrmypdf.ocr(
+            str(pdf_path),
+            str(tmp),
+            language=language,
+            skip_text=True,
+            progress_bar=False,
+            optimize=0,  # we already did size optimisation in the recompress step
+        )
+    except Exception as e:  # noqa: BLE001 — ocrmypdf raises many types
+        # MissingDependencyError surfaces when Tesseract isn't on $PATH.
+        if "tesseract" in str(e).lower() or "MissingDependencyError" in type(e).__name__:
+            raise OcrDependencyError(
+                f"OCR failed because Tesseract is not available: {e}. "
+                "Install it with `brew install tesseract` (macOS) or "
+                "`apt install tesseract-ocr tesseract-ocr-deu` (Debian/Ubuntu)."
+            ) from e
+        tmp.unlink(missing_ok=True)
+        raise RuntimeError(f"OCR failed for {pdf_path.name}: {e}") from e
+    tmp.replace(pdf_path)
+
+
 def assemble_pdf(
     sources: list[Path],
     out_path: Path,
@@ -217,6 +268,8 @@ def build_pdfs(
     *,
     force: bool = False,
     recompress: bool = False,
+    ocr: bool = False,
+    ocr_language: str = DEFAULT_OCR_LANGUAGE,
     metadata: dict | None = None,
     progress_callback: ProgressCallback | None = None,
     cancel_event: threading.Event | None = None,
@@ -228,8 +281,10 @@ def build_pdfs(
     *between* File Units — a unit already mid-build runs to completion to keep
     the on-disk state clean. When ``recompress=True``, source images are
     downsized/re-encoded before PDF assembly to keep output sizes manageable.
+    When ``ocr=True``, an OCR text layer is added to each assembled PDF via
+    ocrmypdf (requires Tesseract; see :class:`OcrDependencyError`).
     Note: existing PDFs are still skipped unless ``force=True`` — if you turn
-    recompression on after an initial build, also pass ``--force`` to rebuild.
+    recompression or OCR on after an initial build, also pass ``--force``.
     """
     import json
 
@@ -351,6 +406,23 @@ def build_pdfs(
                 _emit(seq, naid, "failed")
                 continue
 
+        # Optional OCR pass — in-place via temp+rename so partial OCR can't
+        # corrupt the just-assembled PDF.
+        ocr_status: str | None = None
+        if ocr:
+            try:
+                ocr_pdf_in_place(out_path, language=ocr_language)
+                ocr_status = "ok"
+                log.info("naid=%s OCR layer added (language=%s)", naid, ocr_language)
+            except OcrDependencyError as e:
+                # Hard fail the whole batch — the dep issue won't fix itself per-unit.
+                log.error("naid=%s OCR aborted: %s", naid, e)
+                raise
+            except Exception as e:  # noqa: BLE001
+                log.warning("naid=%s OCR failed, PDF kept without text layer: %s", naid, e)
+                _append_build_error(paths, naid, f"ocr failed: {e}")
+                ocr_status = "failed"
+
         size = out_path.stat().st_size
         results.append(
             _result_row(
@@ -361,6 +433,7 @@ def build_pdfs(
                 pdf_size=size,
                 page_count=page_count,
                 source_size_bytes=source_size_total,
+                ocr_status=ocr_status,
             )
         )
         if recompress and source_size_total > 0:
@@ -404,6 +477,7 @@ def _result_row(
     page_count: int,
     reason: str | None = None,
     source_size_bytes: int | None = None,
+    ocr_status: str | None = None,
 ) -> dict:
     return {
         "seq": seq,
@@ -420,6 +494,7 @@ def _result_row(
         "status": status,
         **({"reason": reason} if reason else {}),
         **({"source_size_bytes": source_size_bytes} if source_size_bytes is not None else {}),
+        **({"ocr_status": ocr_status} if ocr_status is not None else {}),
     }
 
 

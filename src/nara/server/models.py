@@ -56,6 +56,8 @@ class JobCreate(BaseModel):
     filter_query: str | None = None
     rate: float | None = Field(default=None, gt=0, le=60)
     recompress: bool = False
+    ocr: bool = False
+    ocr_language: str = "eng+deu"
 
 
 class JobProgressDto(BaseModel):
@@ -84,6 +86,8 @@ class JobDto(BaseModel):
     started_at: str | None = None
     completed_at: str | None = None
     recompress: bool = False
+    ocr: bool = False
+    ocr_language: str = "eng+deu"
     progress: JobProgressDto = Field(default_factory=JobProgressDto)
     result: JobResultDto = Field(default_factory=JobResultDto)
 

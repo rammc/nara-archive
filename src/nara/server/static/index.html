@@ -105,6 +105,18 @@
             </label>
             <p class="field-hint muted">Re-encodes JPEGs/TIFFs at quality 82 and max 2400 px. Typically shrinks output PDFs 5–10×. Off by default to preserve archival fidelity.</p>
           </div>
+          <div class="field">
+            <label class="checkbox">
+              <input id="job-ocr" type="checkbox">
+              Add OCR text layer to assembled PDFs
+            </label>
+            <p class="field-hint muted">Uses ocrmypdf + Tesseract. Requires <code>pipx inject nara-archive ocrmypdf</code> and a system Tesseract install — see README.</p>
+          </div>
+          <div class="field" id="job-ocr-language-wrap" hidden>
+            <label for="job-ocr-language">OCR languages (Tesseract codes, '+' separated)</label>
+            <input id="job-ocr-language" type="text" value="eng+deu" pattern="[A-Za-z+]+"
+                   title="e.g. eng, deu, eng+deu, eng+deu+fra">
+          </div>
           <div class="actions">
             <button type="button" data-dismiss>Cancel</button>
             <button type="submit" class="btn-primary">Start job</button>

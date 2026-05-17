@@ -119,6 +119,8 @@ def _fake_runners(
         metadata,
         force=False,
         recompress=False,
+        ocr=False,
+        ocr_language="eng+deu",
         progress_callback=None,
         cancel_event=None,
         show_progress_bars=False,
@@ -251,6 +253,8 @@ async def _test_recompress_flag(tmp_path):
         metadata,
         force=False,
         recompress=False,
+        ocr=False,
+        ocr_language="eng+deu",
         progress_callback=None,
         cancel_event=None,
         show_progress_bars=False,
@@ -271,6 +275,50 @@ async def _test_recompress_flag(tmp_path):
         restarted = await mgr.restart(job.job_id)
         await _wait_for(lambda: mgr.get(restarted.job_id).status == "done")
         assert captured["recompress"] is True
+    finally:
+        await mgr.shutdown()
+
+
+def test_ocr_flag_flows_from_create_to_build_runner(tmp_path):
+    """JobManager.create(ocr=True, ocr_language='deu') → runner sees both, restart preserves."""
+    asyncio.run(_test_ocr_flag(tmp_path))
+
+
+async def _test_ocr_flag(tmp_path):
+    captured: dict = {}
+
+    def captured_build_pdfs(
+        paths,
+        *,
+        metadata,
+        force=False,
+        recompress=False,
+        ocr=False,
+        ocr_language="eng+deu",
+        progress_callback=None,
+        cancel_event=None,
+        show_progress_bars=False,
+    ):
+        captured["ocr"] = ocr
+        captured["ocr_language"] = ocr_language
+        return [{"naid": "U", "status": "ok", "pdf_path": "pdfs/x.pdf"}]
+
+    runners = _fake_runners()
+    runners["build_pdfs"] = captured_build_pdfs
+
+    mgr = JobManager(config=_config(tmp_path), runners=runners)
+    await mgr.startup()
+    try:
+        job = await mgr.create(parent_naid="P", ocr=True, ocr_language="deu+fra")
+        await _wait_for(lambda: mgr.get(job.job_id).status == "done")
+        assert captured["ocr"] is True
+        assert captured["ocr_language"] == "deu+fra"
+        # Restart preserves both.
+        captured.clear()
+        restarted = await mgr.restart(job.job_id)
+        await _wait_for(lambda: mgr.get(restarted.job_id).status == "done")
+        assert captured["ocr"] is True
+        assert captured["ocr_language"] == "deu+fra"
     finally:
         await mgr.shutdown()
 

@@ -398,7 +398,16 @@
   const jobFilterInput = $("#job-filter");
   const jobRateInput = $("#job-rate");
   const jobRecompressInput = $("#job-recompress");
+  const jobOcrInput = $("#job-ocr");
+  const jobOcrLangInput = $("#job-ocr-language");
+  const jobOcrLangWrap = $("#job-ocr-language-wrap");
   const jobSub = $("#job-dialog-sub");
+
+  if (jobOcrInput && jobOcrLangWrap) {
+    jobOcrInput.addEventListener("change", () => {
+      jobOcrLangWrap.hidden = !jobOcrInput.checked;
+    });
+  }
 
   function slugifyClient(s) {
     return (s || "")
@@ -415,6 +424,9 @@
     jobFilterInput.value = "";
     jobRateInput.value = "0.5";
     if (jobRecompressInput) jobRecompressInput.checked = false;
+    if (jobOcrInput) jobOcrInput.checked = false;
+    if (jobOcrLangInput) jobOcrLangInput.value = "eng+deu";
+    if (jobOcrLangWrap) jobOcrLangWrap.hidden = true;
     jobSub.textContent = `Parent NAID ${naid}${title ? ` · ${title.slice(0, 80)}` : ""}`;
     jobDialog.showModal();
   }
@@ -429,12 +441,15 @@
   jobForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!pendingNaid) return;
+    const ocrOn = !!(jobOcrInput && jobOcrInput.checked);
     const body = {
       parent_naid: pendingNaid,
       name: jobNameInput.value.trim(),
       filter_query: jobFilterInput.value.trim() || null,
       rate: parseFloat(jobRateInput.value) || 0.5,
       recompress: !!(jobRecompressInput && jobRecompressInput.checked),
+      ocr: ocrOn,
+      ocr_language: ocrOn ? (jobOcrLangInput?.value || "eng+deu").trim() : "eng+deu",
     };
     try {
       const r = await fetch("/api/jobs", {

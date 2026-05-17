@@ -77,6 +77,8 @@ class Job:
     started_at: str | None = None
     completed_at: str | None = None
     recompress: bool = False
+    ocr: bool = False
+    ocr_language: str = "eng+deu"
     progress: JobProgress = field(default_factory=JobProgress)
     result: JobResult = field(default_factory=JobResult)
 
@@ -98,6 +100,8 @@ class Job:
             started_at=d.get("started_at"),
             completed_at=d.get("completed_at"),
             recompress=bool(d.get("recompress", False)),
+            ocr=bool(d.get("ocr", False)),
+            ocr_language=str(d.get("ocr_language") or "eng+deu"),
             progress=progress,
             result=result,
         )
@@ -187,6 +191,8 @@ class JobManager:
         filter_query: str | None = None,
         rate: float | None = None,
         recompress: bool = False,
+        ocr: bool = False,
+        ocr_language: str = "eng+deu",
     ) -> Job:
         if filter_query and not name:
             raise ValueError("name is required when filter_query is set")
@@ -201,6 +207,8 @@ class JobManager:
             status="queued",
             created_at=utc_now_iso(),
             recompress=bool(recompress),
+            ocr=bool(ocr),
+            ocr_language=str(ocr_language or "eng+deu"),
         )
         if not job.parent_naid:
             raise ValueError("parent_naid is required")
@@ -234,6 +242,8 @@ class JobManager:
             filter_query=job.filter_query,
             rate=job.rate,
             recompress=job.recompress,
+            ocr=job.ocr,
+            ocr_language=job.ocr_language,
         )
 
     async def cancel(self, job_id: str) -> Job:
@@ -361,6 +371,8 @@ class JobManager:
                 paths,
                 metadata=metadata_for_phases,
                 recompress=job.recompress,
+                ocr=job.ocr,
+                ocr_language=job.ocr_language,
                 progress_callback=progress,
                 cancel_event=cancel_event,
                 show_progress_bars=False,
