@@ -18,6 +18,10 @@ class SearchHit(BaseModel):
     inclusive_end_year: int | None = None
     digital_object_count: int = 0
     thumbnail_url: str | None = None
+    # Heuristic hint for the UI: "has_scans" | "has_children" | "likely_empty".
+    # Computed from level + digital_object_count without an extra NARA round-trip.
+    downloadability: str = "likely_empty"
+    record_group_number: str | None = None
 
 
 class SearchResponse(BaseModel):
@@ -156,3 +160,30 @@ class ConfigPatch(BaseModel):
 
 class RevealResponse(BaseModel):
     opened: str
+
+
+# --- Presets ---
+
+
+class PresetSearch(BaseModel):
+    q: str
+    record_group: list[str] | None = None
+    level: list[str] | None = None
+    year_from: int | None = None
+    year_to: int | None = None
+    has_digital_objects: bool | None = None
+
+
+class Preset(BaseModel):
+    id: str
+    title: str
+    description: str
+    category: str
+    search: PresetSearch | None = None
+    direct_naid: str | None = None
+    filter_regex_hint: str | None = None
+    tags: list[str] = Field(default_factory=list)
+
+
+class PresetListResponse(BaseModel):
+    presets: list[Preset]

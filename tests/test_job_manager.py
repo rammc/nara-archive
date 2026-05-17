@@ -236,6 +236,32 @@ async def _test_filter_zero(tmp_path):
         await mgr.shutdown()
 
 
+def test_empty_metadata_fails_job_with_clear_message(tmp_path):
+    """fetch_and_persist returned 0 file_units → job is failed, not silently done."""
+    asyncio.run(_test_empty_metadata(tmp_path))
+
+
+async def _test_empty_metadata(tmp_path):
+    runners = _fake_runners()
+
+    def empty_fetch(parent_naid, paths, *, limit, client):
+        return {"source": {"parent_naid": parent_naid}, "file_units": []}
+
+    runners["fetch_and_persist"] = empty_fetch
+    mgr = JobManager(config=_config(tmp_path), runners=runners)
+    await mgr.startup()
+    try:
+        job = await mgr.create(parent_naid="472559770")
+        await _wait_for(lambda: mgr.get(job.job_id).status in ("failed", "done"))
+        finished = mgr.get(job.job_id)
+        assert finished.status == "failed", (
+            f"expected failed but got {finished.status} — silent 'done' is the regression we just fixed"
+        )
+        assert any("no downloadable content" in e.lower() for e in finished.result.errors)
+    finally:
+        await mgr.shutdown()
+
+
 def test_filter_query_without_name_is_rejected(tmp_path):
     asyncio.run(_test_filter_no_name(tmp_path))
 

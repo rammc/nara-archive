@@ -145,7 +145,22 @@ def fetch_and_persist(
     atomic_write_text(paths.metadata_raw, json.dumps(raw, indent=2, ensure_ascii=False))
 
     units = normalize_response(raw)
-    parent_title = _resolve_parent_title(parent_naid, client)
+    parent_record = _resolve_parent_record(parent_naid, client)
+    parent_title = parent_record.get("title") if parent_record else None
+
+    # Leaf-record fallback: NARA records that are themselves File Units (or Items) have
+    # zero children via parentNaId but carry their own digitalObjects. Treat the parent
+    # as a single File Unit so the pipeline still produces one PDF for it.
+    if not units and parent_record and parent_record.get("digitalObjects"):
+        leaf = _normalize_record(parent_record)
+        if leaf["digital_object_count"] > 0:
+            log.info(
+                "parent_naid=%s no children — treating record itself as a single File Unit "
+                "(%d digital objects)",
+                parent_naid,
+                leaf["digital_object_count"],
+            )
+            units = [leaf]
 
     doc = {
         "schema_version": SCHEMA_VERSION,
@@ -163,19 +178,25 @@ def fetch_and_persist(
     return doc
 
 
-def _resolve_parent_title(parent_naid: str, client: NaraClient) -> str | None:
-    """Best-effort lookup of the parent's title via ``records/search?naIds=``."""
+def _resolve_parent_record(parent_naid: str, client: NaraClient) -> dict | None:
+    """Best-effort lookup of the parent's own record via ``records/search?naId=``.
+
+    Used both to enrich ``metadata.json`` with the parent's title and to detect
+    the leaf-record case (records with their own digitalObjects and no children).
+    Failures are non-fatal — return ``None`` and let downstream code fall back.
+    """
     log = get_logger()
     try:
         rec = client.get_record(parent_naid)
-    except Exception as e:  # noqa: BLE001 — title is nice-to-have, never fatal
-        log.warning("parent_naid=%s could not resolve title: %s", parent_naid, e)
+    except Exception as e:  # noqa: BLE001 — best-effort, never fatal
+        log.warning("parent_naid=%s could not resolve record: %s", parent_naid, e)
         return None
     if not rec:
         return None
     hits = _safe_get(rec, "body", "hits", "hits", default=None)
     if isinstance(hits, list) and hits:
-        return _safe_get(hits[0], "_source", "record", "title", default=None)
+        record = _safe_get(hits[0], "_source", "record", default=None)
+        return record if isinstance(record, dict) else None
     return None
 
 

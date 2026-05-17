@@ -16,6 +16,7 @@ from .. import __version__
 from .routes.config import router as config_router
 from .routes.jobs import router as jobs_router
 from .routes.library import router as library_router
+from .routes.presets import router as presets_router
 from .routes.search import router as search_router
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -62,6 +63,7 @@ def create_app(config: Config | None = None) -> FastAPI:
     app.include_router(jobs_router)
     app.include_router(library_router)
     app.include_router(config_router)
+    app.include_router(presets_router)
 
     @app.get("/api/health", response_class=JSONResponse)
     def health() -> dict[str, Any]:

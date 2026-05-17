@@ -13,6 +13,11 @@ from ..models import ChildrenResponse, RecordDetail, SearchHit, SearchResponse
 
 router = APIRouter(prefix="/api", tags=["search"])
 
+# Levels that are "container" records in NARA's hierarchy — they don't carry scans
+# themselves but their descendants typically do. Used by ``_classify_downloadability``
+# to flag "browse contents" without an extra round-trip.
+_CONTAINER_LEVELS = frozenset({"recordGroup", "collection", "series", "subseries", "subgroup"})
+
 
 def get_nara_client(request: Request) -> NaraClient:
     """Build a NaraClient from the app config. Tests override this via Depends."""
@@ -20,6 +25,33 @@ def get_nara_client(request: Request) -> NaraClient:
     if not cfg.api_key:
         raise HTTPException(503, "NARA API key not configured. Run `nara init`.")
     return NaraClient(api_key=cfg.api_key, base=cfg.api_base_url)
+
+
+def _classify_downloadability(level: Any, obj_count: int) -> str:
+    """Heuristic — no NARA round-trip. ``has_scans`` is authoritative; the rest are hints."""
+    if obj_count > 0:
+        return "has_scans"
+    if isinstance(level, str) and level in _CONTAINER_LEVELS:
+        return "has_children"
+    return "likely_empty"
+
+
+def _record_group_number(record: dict[str, Any]) -> str | None:
+    """Pull the RG number from any of the shapes NARA returns it in.
+
+    ``record.recordGroupNumber`` is the simple case; ``ancestors[].recordGroupNumber``
+    appears for File Units / Items where the RG sits up the chain. We pick the first
+    match and stringify it.
+    """
+    direct = record.get("recordGroupNumber")
+    if direct is not None:
+        return str(direct)
+    for anc in record.get("ancestors") or []:
+        if isinstance(anc, dict):
+            v = anc.get("recordGroupNumber")
+            if v is not None:
+                return str(v)
+    return None
 
 
 def _hit_to_dto(hit: dict[str, Any]) -> SearchHit | None:
@@ -39,15 +71,18 @@ def _hit_to_dto(hit: dict[str, Any]) -> SearchHit | None:
             break
     sy = _safe_get(record, "inclusiveStartDate", "year")
     ey = _safe_get(record, "inclusiveEndDate", "year")
+    level = record.get("levelOfDescription")
     return SearchHit(
         naid=naid,
         title=record.get("title"),
-        level=record.get("levelOfDescription"),
+        level=level,
         scope_and_content_note=record.get("scopeAndContentNote"),
         inclusive_start_year=sy if isinstance(sy, int) else None,
         inclusive_end_year=ey if isinstance(ey, int) else None,
         digital_object_count=len(objs),
         thumbnail_url=thumb,
+        downloadability=_classify_downloadability(level, len(objs)),
+        record_group_number=_record_group_number(record),
     )
 
 
@@ -58,6 +93,10 @@ async def search(
     year_from: int | None = Query(None, ge=0),
     year_to: int | None = Query(None, ge=0),
     has_digital_objects: bool = Query(False),
+    record_group: list[str] | None = Query(
+        None,
+        description="One or more Record Group numbers (e.g. 242, 59). Repeat the param or comma-split.",
+    ),
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1, le=100),
     client: NaraClient = Depends(get_nara_client),
@@ -72,6 +111,11 @@ async def search(
         params["endDate"] = str(year_to)
     if has_digital_objects:
         params["availableOnline"] = "true"
+    if record_group:
+        # Accept comma-separated values too so the FE can send one param.
+        rgs = [x.strip() for v in record_group for x in str(v).split(",") if x.strip()]
+        if rgs:
+            params["recordGroupNumber"] = ",".join(rgs)
     try:
         raw = await asyncio.to_thread(client.search, params)
     except NaraApiError as e:

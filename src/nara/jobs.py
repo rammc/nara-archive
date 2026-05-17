@@ -294,6 +294,13 @@ class JobManager:
                 client=client,
             )
 
+            if not meta.get("file_units"):
+                raise RuntimeError(
+                    f"Record {job.parent_naid} has no downloadable content — "
+                    "no child File Units and no digital objects on the record itself. "
+                    "Try a Series- or Record-Group-level NAID, or a File Unit with scans."
+                )
+
             # Optional filter step
             metadata_for_phases = meta
             manifest_target = paths.manifest

@@ -82,6 +82,103 @@ def test_search_minimal_returns_normalized_hits(client_and_fake):
     assert a["digital_object_count"] == 3
     assert a["thumbnail_url"].endswith("page-001.jpg")
     assert a["inclusive_start_year"] == 1944
+    # Every fixture record has digital_objects → all classified as has_scans.
+    assert a["downloadability"] == "has_scans"
+
+
+def test_search_downloadability_classifies_container_and_empty(tmp_path):
+    """Series-level + no objects → has_children. Item + no objects → likely_empty."""
+    app = create_app(_config(tmp_path))
+    fake = FakeNaraClient()
+    fake.search_response = {
+        "body": {
+            "hits": {
+                "total": {"value": 3},
+                "hits": [
+                    {
+                        "_source": {
+                            "record": {
+                                "naId": "S1",
+                                "title": "A Series",
+                                "levelOfDescription": "series",
+                                # No digitalObjects on the series itself.
+                            }
+                        }
+                    },
+                    {
+                        "_source": {
+                            "record": {
+                                "naId": "I1",
+                                "title": "An Item without scans",
+                                "levelOfDescription": "item",
+                            }
+                        }
+                    },
+                    {
+                        "_source": {
+                            "record": {
+                                "naId": "F1",
+                                "title": "A File Unit with scans",
+                                "levelOfDescription": "fileUnit",
+                                "digitalObjects": [{"objectUrl": "https://example.test/F1/p1.jpg"}],
+                            }
+                        }
+                    },
+                ],
+            }
+        }
+    }
+    app.dependency_overrides[get_nara_client] = lambda: fake
+    c = TestClient(app)
+    r = c.get("/api/search", params={"q": "x"})
+    assert r.status_code == 200, r.text
+    by_naid = {h["naid"]: h for h in r.json()["hits"]}
+    assert by_naid["S1"]["downloadability"] == "has_children"
+    assert by_naid["I1"]["downloadability"] == "likely_empty"
+    assert by_naid["F1"]["downloadability"] == "has_scans"
+
+
+def test_search_extracts_record_group_number(tmp_path):
+    """RG number sourced from record.recordGroupNumber OR from ancestors[]."""
+    app = create_app(_config(tmp_path))
+    fake = FakeNaraClient()
+    fake.search_response = {
+        "body": {
+            "hits": {
+                "total": {"value": 2},
+                "hits": [
+                    {
+                        "_source": {
+                            "record": {
+                                "naId": "DIRECT",
+                                "title": "Direct RG",
+                                "levelOfDescription": "series",
+                                "recordGroupNumber": "242",
+                            }
+                        }
+                    },
+                    {
+                        "_source": {
+                            "record": {
+                                "naId": "ANC",
+                                "title": "Ancestor RG",
+                                "levelOfDescription": "fileUnit",
+                                "ancestors": [
+                                    {"naId": "GRP", "recordGroupNumber": "59"},
+                                ],
+                            }
+                        }
+                    },
+                ],
+            }
+        }
+    }
+    app.dependency_overrides[get_nara_client] = lambda: fake
+    c = TestClient(app)
+    body = c.get("/api/search", params={"q": "x"}).json()
+    by_naid = {h["naid"]: h for h in body["hits"]}
+    assert by_naid["DIRECT"]["record_group_number"] == "242"
+    assert by_naid["ANC"]["record_group_number"] == "59"
 
 
 def test_search_passes_filter_params_through(client_and_fake):
@@ -109,6 +206,26 @@ def test_search_passes_filter_params_through(client_and_fake):
     assert sent["startDate"] == "1940"
     assert sent["endDate"] == "1950"
     assert sent["availableOnline"] == "true"
+
+
+def test_search_record_group_param_flows_to_nara(client_and_fake):
+    """record_group is repeated/comma-split and joined into NARA recordGroupNumber."""
+    client, fake = client_and_fake
+    r = client.get(
+        "/api/search",
+        params=[("q", "anything"), ("record_group", "242"), ("record_group", "59,  64")],
+    )
+    assert r.status_code == 200, r.text
+    sent = fake.search_calls[-1]
+    assert sent["recordGroupNumber"] == "242,59,64"
+
+
+def test_search_record_group_param_omitted_when_blank(client_and_fake):
+    """An empty record_group value must not send the NARA filter param."""
+    client, fake = client_and_fake
+    r = client.get("/api/search", params=[("q", "x"), ("record_group", " ")])
+    assert r.status_code == 200, r.text
+    assert "recordGroupNumber" not in fake.search_calls[-1]
 
 
 def test_search_caps_page_size(client_and_fake):

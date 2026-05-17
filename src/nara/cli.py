@@ -355,6 +355,54 @@ def init(
 
 
 @app.command()
+def presets(
+    output_format: str = typer.Option(
+        "table",
+        "--format",
+        help="Output format: 'table' (rich) or 'json'.",
+        case_sensitive=False,
+    ),
+) -> None:
+    """List curated starter searches (currently IG-Farben / WWII research focus)."""
+    from .presets import PresetError, load_presets
+
+    try:
+        data = load_presets()
+    except PresetError as e:
+        typer.echo(f"error: {e}", err=True)
+        raise typer.Exit(1)
+
+    fmt = (output_format or "table").lower()
+    if fmt == "json":
+        typer.echo(json.dumps({"presets": data}, indent=2, ensure_ascii=False))
+        return
+    if fmt != "table":
+        typer.echo(f"error: unknown --format {output_format!r}; use 'table' or 'json'", err=True)
+        raise typer.Exit(2)
+
+    # Lazy-import Rich so plain `--help` / `--format json` stays cheap.
+    from rich.console import Console
+    from rich.table import Table
+
+    table = Table(title=f"{len(data)} curated NARA presets", show_lines=True)
+    table.add_column("id", style="bold")
+    table.add_column("category", style="cyan")
+    table.add_column("title")
+    table.add_column("direct NAID", style="green")
+    table.add_column("RG", style="yellow")
+    for p in data:
+        rgs = ",".join((p.get("search") or {}).get("record_group") or [])
+        table.add_row(
+            p["id"],
+            p["category"],
+            p["title"],
+            p.get("direct_naid") or "—",
+            rgs or "—",
+        )
+    Console().print(table)
+
+
+@app.command()
 def serve(
     host: Optional[str] = typer.Option(
         None,

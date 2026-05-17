@@ -65,10 +65,28 @@
   const ACTIVE = new Set(["queued", "fetching_metadata", "downloading", "building_pdfs"]);
   const TERMINAL = new Set(["done", "failed", "cancelled", "interrupted"]);
 
+  function manifestNameFromPath(p) {
+    if (!p) return null;
+    const base = p.split("/").pop() || "";
+    const stem = base.replace(/\.json$/, "");
+    if (stem === "manifest") return "default";
+    const m = stem.match(/^manifest-(.+)$/);
+    return m ? m[1] : null;
+  }
+
   function jobActions(job) {
     const out = [];
     if (ACTIVE.has(job.status)) {
       out.push(`<button data-action="cancel" data-id="${escapeHtml(job.job_id)}">Cancel</button>`);
+    }
+    if (job.status === "done" && (job.result?.successful_pdfs ?? 0) > 0) {
+      const name = manifestNameFromPath(job.result?.manifest_path);
+      if (name) {
+        out.push(
+          `<button data-action="open-library" data-name="${escapeHtml(name)}">Open in Library</button>`,
+        );
+      }
+      out.push(`<button data-action="reveal-output">Open output folder</button>`);
     }
     if (job.status === "failed" || job.status === "interrupted") {
       out.push(`<button data-action="restart" data-id="${escapeHtml(job.job_id)}">Restart</button>`);
@@ -105,6 +123,15 @@
       ? `<div class="muted">Manifest: <code>${escapeHtml(job.result.manifest_path)}</code></div>`
       : "";
 
+    const manifestName = manifestNameFromPath(job.result?.manifest_path);
+    const pdfListBlock =
+      job.status === "done" && manifestName && (job.result?.successful_pdfs ?? 0) > 0
+        ? `<div class="pdf-list" data-manifest="${escapeHtml(manifestName)}">
+             <strong>Produced PDFs</strong>
+             <ul class="pdf-list-items"><li class="muted">Loading…</li></ul>
+           </div>`
+        : "";
+
     li.innerHTML = `
       <div class="job-head" data-toggle>
         <div class="job-id-block">
@@ -135,6 +162,7 @@
           ${job.result?.failed_pdfs != null ? `<dt>Failed PDFs</dt><dd>${job.result.failed_pdfs}</dd>` : ""}
         </dl>
         ${manifestBlock}
+        ${pdfListBlock}
         ${errorsBlock}
       </div>
       <div class="job-actions">${jobActions(job)}</div>
@@ -159,6 +187,7 @@
       if (li) {
         li.classList.add("expanded");
         li.querySelector(".job-details").hidden = false;
+        loadPdfList(li);
       }
     }
   }
@@ -215,28 +244,80 @@
         const details = card.querySelector(".job-details");
         const isExpanded = card.classList.toggle("expanded");
         details.hidden = !isExpanded;
-        if (isExpanded) expanded.add(id);
-        else expanded.delete(id);
+        if (isExpanded) {
+          expanded.add(id);
+          loadPdfList(card);
+        } else {
+          expanded.delete(id);
+        }
         return;
       }
       const action = t.dataset.action;
-      const id = t.dataset.id;
-      if (!action || !id) return;
+      if (!action) return;
       e.stopPropagation();
+      const id = t.dataset.id;
       try {
         if (action === "cancel" || action === "remove") {
           const r = await fetch(`/api/jobs/${encodeURIComponent(id)}`, { method: "DELETE" });
           if (!r.ok && r.status !== 204) throw new Error(`HTTP ${r.status}`);
+          await fetchAndRender();
         } else if (action === "restart") {
           const r = await fetch(`/api/jobs/${encodeURIComponent(id)}/restart`, { method: "POST" });
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          await fetchAndRender();
+        } else if (action === "open-library") {
+          const name = t.dataset.name;
+          if (name) location.hash = `#library/${name}`;
+        } else if (action === "reveal-output") {
+          const r = await fetch("/api/config/reveal-output", { method: "POST" });
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
         }
-        await fetchAndRender();
       } catch (err) {
         alert(`Action "${action}" failed: ${err.message}`);
       }
     });
   });
+
+  // Cache so re-expanding a card doesn't re-hit the API.
+  const pdfListCache = new Map();
+
+  async function loadPdfList(card) {
+    const holder = card.querySelector(".pdf-list");
+    if (!holder) return;
+    const name = holder.dataset.manifest;
+    if (!name || holder.dataset.loaded === "1") return;
+    let units = pdfListCache.get(name);
+    try {
+      if (!units) {
+        const r = await fetch(`/api/library/${encodeURIComponent(name)}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const body = await r.json();
+        units = body.file_units || [];
+        pdfListCache.set(name, units);
+      }
+      const ul = holder.querySelector(".pdf-list-items");
+      if (!ul) return;
+      if (units.length === 0) {
+        ul.innerHTML = `<li class="muted">No PDFs in this manifest.</li>`;
+      } else {
+        ul.innerHTML = units
+          .filter((u) => u.pdf_path && u.status === "ok")
+          .map((u) => {
+            const href = `/pdfs/${encodeURI(u.pdf_path.replace(/^pdfs\//, ""))}`;
+            const title = u.title || u.naid || "(untitled)";
+            return `<li>
+              <a href="${escapeHtml(href)}" target="_blank" rel="noopener">${escapeHtml(title)}</a>
+              <span class="muted">${u.page_count || 0}p · ${fmtBytes(u.pdf_size_bytes || 0)}</span>
+            </li>`;
+          })
+          .join("");
+      }
+      holder.dataset.loaded = "1";
+    } catch (err) {
+      const ul = holder.querySelector(".pdf-list-items");
+      if (ul) ul.innerHTML = `<li class="error">Could not load PDF list: ${escapeHtml(err.message)}</li>`;
+    }
+  }
 
   // Expose so discovery.js can force a refresh after creating a job.
   window.__naraDownloads = {

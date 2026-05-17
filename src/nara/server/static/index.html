@@ -30,6 +30,11 @@
         <button type="submit" class="btn-primary">Search</button>
       </form>
 
+      <details id="presets-panel" class="presets-panel" open>
+        <summary><strong>Starter searches</strong> <span class="muted" id="presets-summary">curated by topic</span></summary>
+        <div id="presets-list" class="presets-list muted">Loading presets…</div>
+      </details>
+
       <div class="search-layout">
         <aside class="filters">
           <fieldset>
@@ -47,6 +52,11 @@
               <span>–</span>
               <input id="year-to" type="number" placeholder="to" min="0" max="9999">
             </div>
+          </fieldset>
+          <fieldset>
+            <legend>Record Group</legend>
+            <input id="record-group" type="text" placeholder="e.g. 242, 59" aria-label="Record Group numbers, comma-separated">
+            <p class="filter-hint muted">Scope by NARA RG (e.g. <code>242</code> = captured German records).</p>
           </fieldset>
           <fieldset>
             <legend>Other</legend>

@@ -92,11 +92,8 @@ def _opener_for_platform(platform: str) -> list[str] | None:
     return None
 
 
-@router.post("/reveal", response_model=RevealResponse)
-def reveal_config_dir(request: Request) -> RevealResponse:
-    """Open the platform file-manager pointed at ``~/.nara``."""
-    cfg = request.app.state.config
-    target: Path = cfg.config_path.parent if cfg.config_path else user_config_dir()
+def _reveal(target: Path) -> str:
+    """Cross-platform 'show in file manager' — returns the path that was opened."""
     target.mkdir(parents=True, exist_ok=True)
     opener = _opener_for_platform(sys.platform)
     if opener is None:
@@ -105,4 +102,21 @@ def reveal_config_dir(request: Request) -> RevealResponse:
         subprocess.run([*opener, str(target)], check=False, timeout=5)
     except (OSError, subprocess.SubprocessError) as e:
         raise HTTPException(500, f"could not open folder: {e}") from e
-    return RevealResponse(opened=str(target))
+    return str(target)
+
+
+@router.post("/reveal", response_model=RevealResponse)
+def reveal_config_dir(request: Request) -> RevealResponse:
+    """Open the platform file-manager pointed at ``~/.nara``."""
+    cfg = request.app.state.config
+    target: Path = cfg.config_path.parent if cfg.config_path else user_config_dir()
+    return RevealResponse(opened=_reveal(target))
+
+
+@router.post("/reveal-output", response_model=RevealResponse)
+def reveal_output_dir(request: Request) -> RevealResponse:
+    """Open the file manager at the output dir. Prefers ``pdfs/`` if it exists."""
+    cfg = request.app.state.config
+    pdfs = cfg.output_dir / "pdfs"
+    target: Path = pdfs if pdfs.exists() else cfg.output_dir
+    return RevealResponse(opened=_reveal(target))

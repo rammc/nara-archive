@@ -5,13 +5,34 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from nara.metadata import normalize_response
+from nara.metadata import fetch_and_persist, normalize_response
+from nara.utils import OutputPaths
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample_response.json"
 
 
 def _load() -> dict:
     return json.loads(FIXTURE.read_text(encoding="utf-8"))
+
+
+def _empty_children() -> dict:
+    return {"body": {"hits": {"total": {"value": 0}, "hits": []}}}
+
+
+class _FakeClient:
+    """In-memory NaraClient stand-in for fetch_and_persist tests."""
+
+    def __init__(self, *, children: dict | None = None, record: dict | None = None):
+        self._children = children if children is not None else _empty_children()
+        self._record = record
+
+    def get_children(self, parent_naid: str, *, limit: int = 300) -> dict:
+        return self._children
+
+    def get_record(self, naid: str) -> dict | None:
+        if self._record is None:
+            return None
+        return {"body": {"hits": {"hits": [{"_source": {"record": self._record}}]}}}
 
 
 def test_normalize_yields_all_file_units():
@@ -100,3 +121,71 @@ def test_normalize_survives_total_missing():
     # API sometimes returns no hits at all.
     raw = {"body": {"hits": {"hits": []}}}
     assert normalize_response(raw) == []
+
+
+def test_fetch_and_persist_leaf_record_becomes_single_file_unit(tmp_path):
+    """parentNaId returns 0 hits but the record itself has digitalObjects → 1 unit."""
+    leaf = {
+        "naId": "42",
+        "title": "Standalone Item with Scans",
+        "levelOfDescription": "item",
+        "digitalObjects": [
+            {
+                "objectFilename": "scan-1.jpg",
+                "objectUrl": "https://example.test/42/scan-1.jpg",
+                "objectType": "Image (JPG)",
+                "objectFileSize": 12345,
+                "sortNumber": 1,
+            },
+            {
+                "objectFilename": "scan-2.jpg",
+                "objectUrl": "https://example.test/42/scan-2.jpg",
+                "objectType": "Image (JPG)",
+                "objectFileSize": 23456,
+                "sortNumber": 2,
+            },
+        ],
+    }
+    client = _FakeClient(children=_empty_children(), record=leaf)
+    doc = fetch_and_persist("42", OutputPaths(root=tmp_path), client=client)
+    assert len(doc["file_units"]) == 1
+    unit = doc["file_units"][0]
+    assert unit["naid"] == "42"
+    assert unit["title"] == "Standalone Item with Scans"
+    assert unit["digital_object_count"] == 2
+    assert doc["source"]["parent_title"] == "Standalone Item with Scans"
+
+
+def test_fetch_and_persist_empty_record_yields_no_units(tmp_path):
+    """No children and no digitalObjects → empty file_units (JobManager will fail this)."""
+    container = {
+        "naId": "100",
+        "title": "Empty Container",
+        "levelOfDescription": "series",
+        # No digitalObjects key at all.
+    }
+    client = _FakeClient(children=_empty_children(), record=container)
+    doc = fetch_and_persist("100", OutputPaths(root=tmp_path), client=client)
+    assert doc["file_units"] == []
+    assert doc["source"]["parent_title"] == "Empty Container"
+
+
+def test_fetch_and_persist_with_children_ignores_leaf_fallback(tmp_path):
+    """If children exist, the leaf-record fallback must not run."""
+    children_raw = _load()  # 4 file units
+    leaf = {
+        "naId": "999",
+        "title": "Parent",
+        "digitalObjects": [
+            {
+                "objectFilename": "should-be-ignored.jpg",
+                "objectUrl": "https://example.test/999/x.jpg",
+                "sortNumber": 1,
+            }
+        ],
+    }
+    client = _FakeClient(children=children_raw, record=leaf)
+    doc = fetch_and_persist("999", OutputPaths(root=tmp_path), client=client)
+    # 4 from children; parent's own digitalObjects must NOT be added.
+    assert len(doc["file_units"]) == 4
+    assert all(u["naid"] != "999" for u in doc["file_units"])

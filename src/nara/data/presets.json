@@ -1,0 +1,110 @@
+{
+  "schema_version": "1.0",
+  "presets": [
+    {
+      "id": "ig-farben-t83",
+      "title": "T83 — IG Farbenindustrie A.G. records",
+      "description": "Captured records of the German chemical conglomerate, ~1916–1945. Microform publication T83 in RG 242; ~255k digital objects across hundreds of File Units.",
+      "category": "IG Farben",
+      "search": {
+        "q": "T83 IG Farbenindustrie",
+        "record_group": ["242"]
+      },
+      "direct_naid": "7840517",
+      "filter_regex_hint": null,
+      "tags": ["ig-farben", "captured-german", "rg-242", "microform"]
+    },
+    {
+      "id": "ig-farben-trial-m892",
+      "title": "M892 — United States v. Carl Krauch et al. (IG Farben Trial)",
+      "description": "Case VI of the Subsequent Nuremberg Proceedings. Trial transcripts, briefs, prosecution and defense exhibits against 24 IG Farben executives.",
+      "category": "Nuremberg Trials",
+      "search": {
+        "q": "M892 Carl Krauch",
+        "record_group": ["238"]
+      },
+      "direct_naid": null,
+      "filter_regex_hint": "Krauch|ter\\s*Meer|Ambros|von\\s*Schnitzler",
+      "tags": ["ig-farben", "nuremberg", "rg-238", "case-vi"]
+    },
+    {
+      "id": "nuremberg-industrialists-ni",
+      "title": "NI Document Series (Nuremberg Industrialists)",
+      "description": "Evidentiary documents gathered by US prosecutors for the industrialists' trials (Cases V, VI, X). Heavy on internal IG Farben memos, Vorstand minutes, slave-labor contracts.",
+      "category": "Nuremberg Trials",
+      "search": {
+        "q": "NI document Nuremberg",
+        "record_group": ["238"]
+      },
+      "direct_naid": null,
+      "filter_regex_hint": "NI-\\d+",
+      "tags": ["ig-farben", "nuremberg", "rg-238", "evidence"]
+    },
+    {
+      "id": "omgus-decartelization-farben",
+      "title": "OMGUS decartelization — IG Farben dissolution",
+      "description": "Records of the US Military Government in Germany on breaking up IG Farben into successor companies (BASF, Bayer, Hoechst) after 1945.",
+      "category": "Post-war / OMGUS",
+      "search": {
+        "q": "decartelization IG Farben",
+        "record_group": ["260"]
+      },
+      "direct_naid": null,
+      "filter_regex_hint": "decartel|dissolution|liquidation",
+      "tags": ["ig-farben", "omgus", "rg-260", "post-war"]
+    },
+    {
+      "id": "ig-auschwitz-monowitz",
+      "title": "IG Auschwitz / Monowitz / Buna-Werke",
+      "description": "Records on IG Farben's Auschwitz III (Monowitz) slave-labor camp and the Buna synthetic-rubber plant — built and operated using prisoners from the SS.",
+      "category": "Forced labor",
+      "search": {
+        "q": "Monowitz Buna Auschwitz",
+        "record_group": ["238", "242"]
+      },
+      "direct_naid": null,
+      "filter_regex_hint": "Monowitz|Buna|Auschwitz\\s*III",
+      "tags": ["ig-farben", "slave-labor", "auschwitz", "monowitz"]
+    },
+    {
+      "id": "captured-german-records-rg242",
+      "title": "Captured German records (RG 242) — overview",
+      "description": "Top-level Series in RG 242 — the Allies' seized cache of Nazi-era German government, party, and industry records. Good starting point to orient before drilling in.",
+      "category": "Captured records",
+      "search": {
+        "q": "captured German records",
+        "record_group": ["242"],
+        "level": ["series"]
+      },
+      "direct_naid": null,
+      "filter_regex_hint": null,
+      "tags": ["captured-german", "rg-242", "starter"]
+    },
+    {
+      "id": "subsequent-nuremberg-proceedings",
+      "title": "Subsequent Nuremberg Proceedings — all 12 cases",
+      "description": "The US-only follow-on trials after the International Military Tribunal: Medical (I), Milch (II), Justice (III), Pohl (IV), Flick (V), IG Farben (VI), Hostages (VII), RuSHA (VIII), Einsatzgruppen (IX), Krupp (X), Ministries (XI), High Command (XII).",
+      "category": "Nuremberg Trials",
+      "search": {
+        "q": "Nuremberg Military Tribunal",
+        "record_group": ["238"]
+      },
+      "direct_naid": null,
+      "filter_regex_hint": null,
+      "tags": ["nuremberg", "rg-238", "war-crimes"]
+    },
+    {
+      "id": "german-foreign-office-microcopy",
+      "title": "T120 — German Foreign Office archives",
+      "description": "Captured records of the Auswärtiges Amt. Useful for IG Farben's foreign operations, currency-clearing, and wartime trade — references to the firm appear throughout.",
+      "category": "Captured records",
+      "search": {
+        "q": "T120 German Foreign Office",
+        "record_group": ["242"]
+      },
+      "direct_naid": null,
+      "filter_regex_hint": "Farben|Bayer|Hoechst|BASF",
+      "tags": ["captured-german", "rg-242", "microform", "auswaertiges-amt"]
+    }
+  ]
+}

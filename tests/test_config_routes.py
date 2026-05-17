@@ -112,3 +112,57 @@ def test_reveal_invokes_platform_opener(tmp_path, monkeypatch):
     assert r.json()["opened"].endswith("nara") or "config.toml" not in r.json()["opened"]
     assert len(calls) == 1
     assert calls[0][0] == "open"
+
+
+def test_reveal_output_prefers_pdfs_subdir(tmp_path, monkeypatch):
+    """If output_dir/pdfs exists, reveal-output targets it; otherwise the output_dir itself."""
+    calls = []
+
+    class FakeResult:
+        returncode = 0
+
+    def fake_run(cmd, **kwargs):
+        calls.append(cmd)
+        return FakeResult()
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr("sys.platform", "darwin")
+
+    cfg = _config(tmp_path, persist=True)
+    (cfg.output_dir / "pdfs").mkdir(parents=True, exist_ok=True)
+
+    app = create_app(cfg)
+    c = TestClient(app)
+    r = c.post("/api/config/reveal-output")
+    assert r.status_code == 200, r.text
+    assert r.json()["opened"].endswith("/pdfs")
+    assert calls[-1][0] == "open"
+
+
+def test_reveal_output_falls_back_when_pdfs_missing(tmp_path, monkeypatch):
+    """If the pdfs/ subdir is deleted after server start, reveal-output falls back."""
+    calls = []
+
+    class FakeResult:
+        returncode = 0
+
+    def fake_run(cmd, **kwargs):
+        calls.append(cmd)
+        return FakeResult()
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr("sys.platform", "darwin")
+
+    cfg = _config(tmp_path, persist=True)
+    app = create_app(cfg)  # always creates output_dir/pdfs for the static mount
+    # Simulate the user wiping the pdfs/ dir between server start and reveal click.
+    import shutil
+
+    shutil.rmtree(cfg.output_dir / "pdfs")
+
+    c = TestClient(app)
+    r = c.post("/api/config/reveal-output")
+    assert r.status_code == 200, r.text
+    opened = r.json()["opened"]
+    assert opened.endswith("/out")
+    assert not opened.endswith("/pdfs")
