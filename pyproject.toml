@@ -36,6 +36,10 @@ dependencies = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.27",
     "httpx>=0.27",
+    # macOS-only: menubar wrapper for the bundled .app + Keychain default.
+    # PyPI installs on Linux/Windows skip these via the platform marker.
+    "rumps>=0.4 ; sys_platform == 'darwin'",
+    "keyring>=24.0 ; sys_platform == 'darwin'",
 ]
 
 [project.optional-dependencies]
@@ -51,9 +55,20 @@ ocr = [
     # be installed externally (brew install tesseract / apt install tesseract-ocr).
     "ocrmypdf>=15.0",
 ]
+mac = [
+    # Already pulled in by the platform-marker dependencies above when running
+    # on macOS — this extra exists so `pip install 'nara-archive[mac]'` is a
+    # discoverable noun for the install docs.
+    "rumps>=0.4 ; sys_platform == 'darwin'",
+    "keyring>=24.0 ; sys_platform == 'darwin'",
+    "pyinstaller>=6.0 ; sys_platform == 'darwin'",
+]
 
 [project.scripts]
 nara = "nara.cli:app"
+# Used only by the PyInstaller-bundled macOS .app. Safe to invoke directly from
+# a venv on a Mac for development (`python -m nara.macapp.main`).
+nara-archive-app = "nara.macapp.main:main"
 
 [project.urls]
 Homepage = "https://github.com/rammc/nara-archive"

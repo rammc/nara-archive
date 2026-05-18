@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nara archive — setup</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/setup.css">
+</head>
+<body class="setup-body">
+  <main class="setup-shell">
+    <header class="setup-head">
+      <h1>Welcome to nara archive</h1>
+      <p class="muted">A two-minute setup, then you're ready to search the National Archives Catalog.</p>
+    </header>
+
+    <ol class="setup-steps">
+      <li class="setup-step">
+        <h2>1. Paste your NARA API key</h2>
+        <p class="muted">Free for research; request at
+          <a href="https://www.archives.gov/research/catalog/help/api" target="_blank" rel="noopener">archives.gov/research/catalog/help/api</a>
+          (email Catalog_API@nara.gov with a one-sentence description of your project).
+        </p>
+        <div class="setup-field">
+          <input id="api-key" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="40-character key, e.g. kYz0123…xvC9" aria-label="NARA API key">
+          <button type="button" id="validate-btn" class="btn-primary">Validate</button>
+        </div>
+        <p id="validate-msg" class="setup-msg muted">We'll make one test request to confirm the key works.</p>
+      </li>
+
+      <li class="setup-step">
+        <h2>2. Choose where downloads land</h2>
+        <p class="muted">PDFs, manifests, and run logs all live here. The default works on most machines.</p>
+        <div class="setup-field">
+          <input id="output-dir" type="text" placeholder="~/.nara/output" aria-label="Output directory">
+        </div>
+      </li>
+
+      <li class="setup-step">
+        <h2>3. Acknowledge NARA's terms of use</h2>
+        <div class="setup-terms">
+          <p>
+            This tool uses the National Archives Catalog API but is <strong>not endorsed</strong>
+            by the National Archives and Records Administration. NARA grants <strong>10,000 API
+            requests per key per month</strong> and asks consumers to keep usage polite. For
+            full-archive bulk transfers (millions of files), NARA recommends the
+            <a href="https://registry.opendata.aws/nara/" target="_blank" rel="noopener">AWS Open Data mirror</a>
+            instead. This tool defaults to 0.5 seconds between requests and never parallelises downloads.
+          </p>
+          <label class="setup-ack">
+            <input id="ack-terms" type="checkbox">
+            I've read and understood the above; I'll use the tool responsibly.
+          </label>
+        </div>
+      </li>
+    </ol>
+
+    <footer class="setup-foot">
+      <button id="get-started" type="button" class="btn-primary" disabled>Get started</button>
+      <p id="setup-msg" class="muted setup-msg" aria-live="polite"></p>
+    </footer>
+  </main>
+
+  <script src="/static/setup.js" defer></script>
+</body>
+</html>

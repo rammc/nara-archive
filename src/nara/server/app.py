@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -18,6 +18,7 @@ from .routes.jobs import router as jobs_router
 from .routes.library import router as library_router
 from .routes.presets import router as presets_router
 from .routes.search import router as search_router
+from .routes.setup import install_first_run_redirect, router as setup_router
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -59,6 +60,8 @@ def create_app(config: Config | None = None) -> FastAPI:
     pdfs_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/pdfs", StaticFiles(directory=str(pdfs_dir)), name="pdfs")
 
+    app.include_router(setup_router)
+    install_first_run_redirect(app)
     app.include_router(search_router)
     app.include_router(jobs_router)
     app.include_router(library_router)
@@ -66,13 +69,16 @@ def create_app(config: Config | None = None) -> FastAPI:
     app.include_router(presets_router)
 
     @app.get("/api/health", response_class=JSONResponse)
-    def health() -> dict[str, Any]:
+    def health(request: Request) -> dict[str, Any]:
+        # Read from app.state so the setup wizard's POST /api/setup/complete
+        # is visible to /api/health on the same running server.
+        live = request.app.state.config
         return {
             "status": "ok",
             "version": __version__,
-            "has_api_key": cfg.has_api_key,
-            "terms_acknowledged": cfg.terms_acknowledged,
-            "output_dir": str(cfg.output_dir),
+            "has_api_key": live.has_api_key,
+            "terms_acknowledged": live.terms_acknowledged,
+            "output_dir": str(live.output_dir),
         }
 
     @app.get("/")

@@ -1,0 +1,64 @@
+/* Setup-only styles. Reuses app.css design tokens (var(--bg), var(--accent), …). */
+
+.setup-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 2rem 1rem;
+}
+.setup-shell {
+  width: 100%;
+  max-width: 640px;
+  background: var(--bg-2, var(--bg));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem 2.2rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+.setup-head h1 { margin: 0 0 0.4rem 0; }
+.setup-head .muted { margin: 0 0 1.6rem 0; }
+.setup-steps { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+.setup-step + .setup-step { margin-top: 1.4rem; }
+.setup-step h2 { margin: 0 0 0.4rem 0; font-size: 1.05rem; }
+.setup-step .muted { margin: 0 0 0.6rem 0; font-size: 0.9rem; }
+.setup-field {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+.setup-field input[type="text"] {
+  flex: 1;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  font-family: ui-monospace, "JetBrains Mono", monospace;
+  font-size: 0.95rem;
+}
+.setup-field input[type="text"]:focus { outline: 2px solid var(--accent); }
+.setup-msg { margin: 0.4rem 0 0 0; font-size: 0.85rem; line-height: 1.35; }
+.setup-ok { color: #6bb877; }
+.setup-err { color: #d97766; }
+
+.setup-terms { font-size: 0.9rem; line-height: 1.55; }
+.setup-terms p { margin: 0 0 0.75rem 0; }
+.setup-ack {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  cursor: pointer;
+}
+.setup-ack input { margin-top: 0.2rem; }
+
+.setup-foot {
+  margin-top: 1.8rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.setup-foot .btn-primary { align-self: flex-end; }
