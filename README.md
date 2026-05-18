@@ -448,6 +448,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development workflow.
 - ~~OCR pass with `ocrmypdf`.~~ ✓ Shipped — see [OCR](#ocr).
 - ~~User-extensible presets via `~/.nara/presets.json`.~~ ✓ Shipped — see
   [Custom presets](#custom-presets).
+- Signed macOS `.app` distributed via `.dmg` (in progress — code merged,
+  awaiting first release tag — see [`docs/RELEASE.md`](docs/RELEASE.md)).
 - Optional sibling tool against the AWS Open Data S3 mirror for
   full-archive workloads.
 

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTD/PropertyList-1.0.dtd">
+<!--
+  Minimum entitlements for a PyInstaller-bundled Python app under Apple's
+  Hardened Runtime. Each entitlement here is justified:
+
+    allow-jit / allow-unsigned-executable-memory
+      Python ships with libffi which JIT-compiles trampolines for C ABI
+      calls (used heavily by Pydantic v2 / pydantic_core). Without these
+      the app crashes on first import with "EXC_BAD_ACCESS".
+
+    disable-library-validation
+      PyInstaller bundles dozens of dylibs under Contents/Frameworks/
+      that aren't signed by Apple. Library validation rejects them.
+
+    network.server / network.client
+      We bind a localhost socket (server) and call out to NARA + GitHub
+      (client). Without server, even 127.0.0.1 listens fail under
+      Hardened Runtime on macOS 12+.
+-->
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.cs.allow-jit</key><true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key><true/>
+    <key>com.apple.security.cs.disable-library-validation</key><true/>
+    <key>com.apple.security.network.server</key><true/>
+    <key>com.apple.security.network.client</key><true/>
+</dict>
+</plist>

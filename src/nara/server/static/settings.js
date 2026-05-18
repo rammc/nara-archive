@@ -41,9 +41,10 @@
 
   async function refresh() {
     try {
-      const [cfgResp, healthResp] = await Promise.all([
+      const [cfgResp, healthResp, updatesResp] = await Promise.all([
         fetch("/api/config"),
         fetch("/api/health"),
+        fetch("/api/updates"),
       ]);
       if (!cfgResp.ok) throw new Error(`config: HTTP ${cfgResp.status}`);
       render(await cfgResp.json());
@@ -53,9 +54,26 @@
         $("#footer-version").textContent = "v" + h.version;
         $("#footer-server").textContent = location.host;
       }
+      if (updatesResp.ok) {
+        renderUpdate(await updatesResp.json());
+      }
     } catch (e) {
       setMsg(`Failed to load: ${e.message}`, "error");
     }
+  }
+
+  function renderUpdate(info) {
+    const banner = $("#update-banner");
+    if (!banner) return;
+    if (!info || !info.available) {
+      banner.hidden = true;
+      return;
+    }
+    $("#update-banner-text").textContent =
+      `A newer version is available: v${info.latest_version} (you have v${info.current_version}).`;
+    const link = $("#update-banner-link");
+    if (info.release_url) link.href = info.release_url;
+    banner.hidden = false;
   }
 
   async function save(e) {

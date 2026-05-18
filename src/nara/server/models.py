@@ -172,6 +172,17 @@ class RevealResponse(BaseModel):
     opened: str
 
 
+# --- Updates ---
+
+
+class UpdateInfoDto(BaseModel):
+    current_version: str
+    latest_version: str | None = None
+    release_url: str | None = None
+    available: bool = False
+    error: str | None = None
+
+
 # --- Presets ---
 
 

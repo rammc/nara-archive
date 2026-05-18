@@ -1,0 +1,122 @@
+name: release-mac
+
+# Build, sign, notarize, and upload the macOS .dmg whenever a release tag is
+# pushed. See docs/RELEASE.md for the one-time secret setup.
+#
+# Manual trigger via workflow_dispatch is also supported for dry-run testing
+# against a release that already exists (or as a pre-tag rehearsal — the
+# upload step is skipped without a tag context).
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build-mac-dmg:
+    # macos-14 is Apple Silicon (arm64). The python.org universal2 installer
+    # gives us cross-arch output regardless of host arch — but we install on
+    # arm64 specifically to keep CI time predictable.
+    runs-on: macos-14
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install universal2 Python 3.12 from python.org
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/python.pkg https://www.python.org/ftp/python/3.12.7/python-3.12.7-macos11.pkg
+          sudo installer -pkg /tmp/python.pkg -target /
+          ls /Library/Frameworks/Python.framework/Versions/3.12/bin/
+          /Library/Frameworks/Python.framework/Versions/3.12/bin/python3 -c \
+            "import sysconfig; print(sysconfig.get_platform())"
+
+      - name: Set up venv + install project
+        run: |
+          set -euo pipefail
+          export PATH="/Library/Frameworks/Python.framework/Versions/3.12/bin:$PATH"
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -e ".[mac]"
+          pip install pyinstaller
+
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      - name: Import Developer ID certificate into a temporary keychain
+        env:
+          CERT_P12: ${{ secrets.APPLE_DEVELOPER_CERT_P12 }}
+          CERT_PASSWORD: ${{ secrets.APPLE_DEVELOPER_CERT_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN_PATH="$RUNNER_TEMP/nara-release.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          CERT_PATH="$RUNNER_TEMP/cert.p12"
+          echo "$CERT_P12" | base64 --decode > "$CERT_PATH"
+          security import "$CERT_PATH" -P "$CERT_PASSWORD" -A \
+            -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | xargs)
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Sanity: at least one Developer ID identity should be visible.
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep -q "Developer ID Application" \
+            || (echo "no Developer ID identity in keychain" && exit 1)
+
+          rm -f "$CERT_PATH"
+
+      - name: Build .app
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          make app
+
+      - name: Sign + notarize .app
+        env:
+          APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          make sign
+
+      - name: Build + notarize DMG
+        env:
+          APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          make dmg
+
+      - name: Upload DMG to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/NARA-Archive-*.dmg
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+
+      - name: Clean up temporary keychain
+        if: always()
+        env:
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          set -e
+          KEYCHAIN_PATH="$RUNNER_TEMP/nara-release.keychain-db"
+          if [[ -f "$KEYCHAIN_PATH" ]]; then
+            security delete-keychain "$KEYCHAIN_PATH" || true
+          fi

@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from ..config import Config, resolve_config
 from ..jobs import JobManager
+from ..updater import schedule_startup_check
 from .. import __version__
 from .routes.config import router as config_router
 from .routes.jobs import router as jobs_router
@@ -19,6 +20,7 @@ from .routes.library import router as library_router
 from .routes.presets import router as presets_router
 from .routes.search import router as search_router
 from .routes.setup import install_first_run_redirect, router as setup_router
+from .routes.updates import router as updates_router
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -32,6 +34,7 @@ def create_app(config: Config | None = None) -> FastAPI:
         manager = JobManager(config=cfg)
         await manager.startup()
         app.state.jobs = manager
+        schedule_startup_check(app, current_version=__version__, enabled=cfg.check_for_updates)
         try:
             yield
         finally:
@@ -67,6 +70,7 @@ def create_app(config: Config | None = None) -> FastAPI:
     app.include_router(library_router)
     app.include_router(config_router)
     app.include_router(presets_router)
+    app.include_router(updates_router)
 
     @app.get("/api/health", response_class=JSONResponse)
     def health(request: Request) -> dict[str, Any]:

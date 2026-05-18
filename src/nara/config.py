@@ -61,6 +61,10 @@ class Config:
     terms_acknowledged: bool
     acknowledged_at: str | None
     raw_toml: dict[str, Any] = field(default_factory=dict)
+    # GitHub release-check toggle. Default ON so first-run users learn about
+    # patch releases without having to discover the setting. Anonymous —
+    # one GET on startup, no telemetry beyond that.
+    check_for_updates: bool = True
 
     @property
     def has_api_key(self) -> bool:
@@ -161,6 +165,7 @@ def resolve_config(*, load_dotenv: bool = True) -> Config:
     storage_section = toml.get("storage", {}) if isinstance(toml.get("storage"), dict) else {}
     ui_section = toml.get("ui", {}) if isinstance(toml.get("ui"), dict) else {}
     meta_section = toml.get("meta", {}) if isinstance(toml.get("meta"), dict) else {}
+    updates_section = toml.get("updates", {}) if isinstance(toml.get("updates"), dict) else {}
 
     # Precedence: NARA_API_KEY env > macOS Keychain (only meaningful in the
     # PyInstaller-bundled .app) > TOML. Env stays the override of last resort
@@ -196,6 +201,7 @@ def resolve_config(*, load_dotenv: bool = True) -> Config:
         config_path=toml_path if toml_path.exists() else None,
         terms_acknowledged=bool(meta_section.get("nara_terms_acknowledged")),
         acknowledged_at=meta_section.get("acknowledged_at"),
+        check_for_updates=bool(updates_section.get("check_on_startup", True)),
         raw_toml=toml,
     )
 

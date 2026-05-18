@@ -6,5 +6,10 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 dist/
-build/
+# Keep hand-written build scripts (build/*.spec, *.plist, *.sh, *.py) under
+# version control; ignore the generated artefacts.
+build/work/
+build/nara-archive.icns
+build/nara-archive.iconset/*.png
+build/menubar-icon.png
 *.pyc
