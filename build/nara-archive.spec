@@ -13,7 +13,6 @@ Local build (after `pip install -e ".[mac]"`):
 Output: dist/NARA Archive.app
 """
 
-import sysconfig
 from pathlib import Path
 
 # Resolve relative to the project root regardless of where PyInstaller is
@@ -21,15 +20,20 @@ from pathlib import Path
 # this spec file.
 ROOT = Path(SPECPATH).parent.resolve()  # noqa: F821 — SPECPATH is injected by PyInstaller
 
-# Auto-detect: only ask for universal2 when the host Python is itself
-# universal2 (i.e. the python.org installer, NOT homebrew). When CI runs
-# this spec on a python.org universal2 Python, target_arch="universal2"
-# wins and we get a fat binary. When a developer runs `make app` locally
-# from a single-arch homebrew/asdf venv, target_arch falls back to None
-# and PyInstaller produces a host-architecture-only sanity build instead
-# of crashing on the first non-fat .so it bundles.
-_PLATFORM = sysconfig.get_platform()
-TARGET_ARCH = "universal2" if "universal2" in _PLATFORM else None
+# Host-architecture only for v0.9.x.
+#
+# We tried target_arch="universal2" first. It works for the bootloader EXE
+# (PyInstaller's own binary ships universal2), but the moment COLLECT visits
+# pip-installed C extensions it fails: pip on an arm64 runner prefers the
+# more-specific arm64-only wheel over the universal2 wheel, so dozens of
+# bundled .so files are single-arch. PyInstaller refuses to lipo-merge a
+# non-fat input.
+#
+# Path forward (tracked as a roadmap item): build twice on macos-14 (arm64)
+# and macos-13 (x86_64) GitHub runners, then `lipo`-merge the two .apps in
+# a follow-up job. v0.9.x ships arm64-only to keep the smoke-test pipeline
+# small and getting Apple-Silicon Macs (≈90 % of modern installs) covered.
+TARGET_ARCH = None
 
 # --- version + build number ----------------------------------------------
 

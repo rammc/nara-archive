@@ -78,6 +78,17 @@ git push --tags` plus a 15-minute wait for Apple's notary service.
 - **Stuck "In Progress" for over 30 minutes** — Apple's notary service is slow
   that day. The workflow has a 45-minute timeout. Re-run after it clears.
 
+## Architecture coverage (v0.9.x)
+
+Current DMGs are **arm64 (Apple Silicon) only.** The CI runs on `macos-14`
+which is an Apple-Silicon GitHub runner, and the bundled C-extension
+wheels (Pillow, pydantic-core, …) are arm64-specific on that host. Intel
+Macs (pre-2020) can't run the resulting `.app`.
+
+Roadmap: add a parallel build on `macos-13` (Intel) and merge the two
+`.app` bundles with `lipo` in a follow-up job. Until then, Intel users
+fall back to the `pipx install nara-archive` CLI path.
+
 ## Local dry-run
 
 ```bash
