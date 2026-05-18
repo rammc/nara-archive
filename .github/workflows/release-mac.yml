@@ -13,6 +13,12 @@ on:
       - 'v*.*.*'
   workflow_dispatch:
 
+# GITHUB_TOKEN defaults to read-only since 2023 in most orgs; the release
+# upload step needs ``contents: write`` to create a Release and attach the
+# .dmg asset. Scope is intentionally minimal.
+permissions:
+  contents: write
+
 jobs:
   build-mac-dmg:
     # macos-14 is Apple Silicon (arm64). The python.org universal2 installer
