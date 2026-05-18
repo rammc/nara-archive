@@ -13,9 +13,12 @@
   function render(cfg) {
     $("#kv-server").textContent = location.host;
     $("#kv-version").textContent = "—";  // filled from /api/health below
-    $("#kv-apikey").textContent = cfg.has_api_key
-      ? `configured (${cfg.api_key_masked})`
-      : "missing — run `nara init`";
+    const keychainBadge = cfg.keychain_active
+      ? ' <span class="badge badge-scans" title="Stored in macOS Keychain">Keychain</span>'
+      : "";
+    $("#kv-apikey").innerHTML = cfg.has_api_key
+      ? `configured (${escapeHtml(cfg.api_key_masked || "")})${keychainBadge}`
+      : "missing — run <code>nara init</code> or visit /setup";
     $("#kv-apibase").textContent = cfg.api_base_url;
     $("#kv-output").textContent = cfg.output_dir;
     $("#kv-configpath").textContent = cfg.config_path || "(none — using env / .env)";
@@ -24,6 +27,16 @@
       : "no — run `nara init`";
     $("#set-rate").value = cfg.default_rate;
     $("#set-autobrowser").checked = !!cfg.auto_open_browser;
+    const resetBtn = $("#settings-reset-key");
+    if (resetBtn) resetBtn.hidden = !cfg.has_api_key;
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
   }
 
   async function refresh() {
@@ -88,6 +101,21 @@
     return (location.hash || "").replace(/^#/, "").split("/")[0] || "discovery";
   }
 
+  async function resetKey() {
+    if (!confirm("Remove the stored API key and return to the setup wizard?")) return;
+    setMsg("Resetting…");
+    try {
+      const r = await fetch("/api/config/reset-key", { method: "POST" });
+      if (!r.ok && r.status !== 204) {
+        const err = await r.json().catch(() => ({ detail: r.statusText }));
+        throw new Error(err.detail || `HTTP ${r.status}`);
+      }
+      location.href = "/setup";
+    } catch (e) {
+      setMsg(`Reset failed: ${e.message}`, "error");
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     refresh();
     window.addEventListener("hashchange", () => {
@@ -95,5 +123,7 @@
     });
     $("#settings-form").addEventListener("submit", save);
     $("#settings-reveal").addEventListener("click", reveal);
+    const resetBtn = $("#settings-reset-key");
+    if (resetBtn) resetBtn.addEventListener("click", resetKey);
   });
 })();

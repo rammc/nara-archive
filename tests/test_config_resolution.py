@@ -133,3 +133,59 @@ def test_detect_legacy_env_only_when_no_toml(isolated_home):
 
     cfgmod.write_config(api_key="x", output_dir=home / "out", target=home / "config.toml")
     assert cfgmod.detect_legacy_env() is None
+
+
+# --- Keychain integration ---
+
+
+def test_keychain_unavailable_when_not_frozen(monkeypatch):
+    """Plain pip-installed CLI must NOT prefer Keychain — TOML keeps the workflow."""
+    monkeypatch.delenv("NARA_FORCE_KEYCHAIN", raising=False)
+    # We're not running under PyInstaller in tests.
+    assert cfgmod._keychain_available() is False
+    # The reader returns None without touching keyring.
+    assert cfgmod._read_keychain_key() is None
+
+
+def test_keychain_read_with_force_flag(isolated_home, monkeypatch):
+    """NARA_FORCE_KEYCHAIN=1 + a fake keyring → Keychain wins over TOML key."""
+    home, _cwd = isolated_home
+    cfgmod.write_config(api_key="from-toml", output_dir=home / "out", target=home / "config.toml")
+    monkeypatch.setenv("NARA_FORCE_KEYCHAIN", "1")
+
+    import platform as _platform
+
+    monkeypatch.setattr(_platform, "system", lambda: "Darwin")
+
+    import sys as _sys
+    import types as _types
+
+    fake_kr = _types.ModuleType("keyring")
+    fake_kr.get_password = lambda service, account: (  # type: ignore[attr-defined]
+        "from-keychain" if service == "dev.cramm.nara-archive" else None
+    )
+    monkeypatch.setitem(_sys.modules, "keyring", fake_kr)
+
+    cfg = cfgmod.resolve_config(load_dotenv=False)
+    assert cfg.api_key == "from-keychain", "Keychain must beat TOML when available"
+
+
+def test_env_var_still_beats_keychain(isolated_home, monkeypatch):
+    """NARA_API_KEY env override is the user's escape hatch — must win over Keychain."""
+    home, _cwd = isolated_home
+    monkeypatch.setenv("NARA_FORCE_KEYCHAIN", "1")
+    monkeypatch.setenv("NARA_API_KEY", "from-env")
+
+    import platform as _platform
+
+    monkeypatch.setattr(_platform, "system", lambda: "Darwin")
+
+    import sys as _sys
+    import types as _types
+
+    fake_kr = _types.ModuleType("keyring")
+    fake_kr.get_password = lambda *_a, **_k: "from-keychain"  # type: ignore[attr-defined]
+    monkeypatch.setitem(_sys.modules, "keyring", fake_kr)
+
+    cfg = cfgmod.resolve_config(load_dotenv=False)
+    assert cfg.api_key == "from-env"

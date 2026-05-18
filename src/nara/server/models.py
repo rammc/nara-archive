@@ -157,6 +157,10 @@ class ConfigDto(BaseModel):
     terms_acknowledged: bool
     acknowledged_at: str | None = None
     config_path: str | None = None
+    # True when the running process resolved the API key from macOS Keychain
+    # (i.e. inside the bundled .app). Settings tab uses this to show a badge
+    # and to expose the Reset-Key button.
+    keychain_active: bool = False
 
 
 class ConfigPatch(BaseModel):

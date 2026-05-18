@@ -139,6 +139,40 @@ def test_reveal_output_prefers_pdfs_subdir(tmp_path, monkeypatch):
     assert calls[-1][0] == "open"
 
 
+def test_reset_key_clears_api_key_and_returns_204(tmp_path, monkeypatch):
+    """POST /api/config/reset-key drops the in-memory key + invokes Keychain delete."""
+    calls = []
+
+    def fake_delete():
+        calls.append("delete")
+        return True
+
+    from nara.server.routes import config as config_routes
+
+    monkeypatch.setattr(config_routes, "delete_keychain_key", fake_delete)
+
+    app = create_app(_config(tmp_path, persist=True))
+    c = TestClient(app)
+    # Sanity: key is configured.
+    assert c.get("/api/config").json()["has_api_key"] is True
+
+    r = c.post("/api/config/reset-key")
+    assert r.status_code == 204
+    assert calls == ["delete"]
+    # In-memory state was wiped.
+    assert c.get("/api/config").json()["has_api_key"] is False
+
+
+def test_config_dto_reports_keychain_inactive_on_linux(tmp_path):
+    """Non-darwin runs report keychain_active=False even if keyring is importable."""
+    app = create_app(_config(tmp_path, persist=True))
+    c = TestClient(app)
+    body = c.get("/api/config").json()
+    # In the test suite (running from a venv, not frozen), keychain is inactive
+    # regardless of platform unless NARA_FORCE_KEYCHAIN is set.
+    assert body["keychain_active"] is False
+
+
 def test_reveal_output_falls_back_when_pdfs_missing(tmp_path, monkeypatch):
     """If the pdfs/ subdir is deleted after server start, reveal-output falls back."""
     calls = []

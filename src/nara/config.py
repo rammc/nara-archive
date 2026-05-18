@@ -86,6 +86,61 @@ def _maybe_load_dotenv() -> None:
         load_dotenv(cwd_env, override=False)
 
 
+# --- macOS Keychain integration --------------------------------------------
+#
+# Used by the PyInstaller-bundled .app where storing the API key in plaintext
+# TOML inside ``Contents/Resources/`` would be wrong. We use the system Keychain
+# via the ``keyring`` library. On non-Darwin systems or when keyring isn't
+# installed, all three helpers return ``None`` / no-op so calling code stays
+# branch-free.
+
+KEYCHAIN_SERVICE = "dev.cramm.nara-archive"
+KEYCHAIN_ACCOUNT = "api_key"
+
+
+def _keychain_available() -> bool:
+    import platform
+    import sys
+
+    if platform.system() != "Darwin":
+        return False
+    # In a pip-installed CLI we honour TOML first to keep the existing workflow.
+    # Only the bundled .app should prefer Keychain reads.
+    if not getattr(sys, "frozen", False) and not os.environ.get("NARA_FORCE_KEYCHAIN"):
+        return False
+    try:
+        import keyring  # noqa: F401 — probe
+    except ImportError:
+        return False
+    return True
+
+
+def _read_keychain_key() -> str | None:
+    if not _keychain_available():
+        return None
+    try:
+        import keyring
+
+        return keyring.get_password(KEYCHAIN_SERVICE, KEYCHAIN_ACCOUNT)
+    except Exception:  # noqa: BLE001 — backends raise platform-specific errors
+        return None
+
+
+def delete_keychain_key() -> bool:
+    """Remove the bundled-app API key from Keychain. Returns True if something was deleted."""
+    if not _keychain_available():
+        return False
+    try:
+        import keyring
+
+        keyring.delete_password(KEYCHAIN_SERVICE, KEYCHAIN_ACCOUNT)
+        return True
+    except keyring.errors.PasswordDeleteError:
+        return False
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def _resolve_output_dir(toml_value: str | None) -> Path:
     if toml_value:
         return Path(toml_value).expanduser().resolve()
@@ -107,7 +162,10 @@ def resolve_config(*, load_dotenv: bool = True) -> Config:
     ui_section = toml.get("ui", {}) if isinstance(toml.get("ui"), dict) else {}
     meta_section = toml.get("meta", {}) if isinstance(toml.get("meta"), dict) else {}
 
-    api_key = os.environ.get("NARA_API_KEY") or api_section.get("key")
+    # Precedence: NARA_API_KEY env > macOS Keychain (only meaningful in the
+    # PyInstaller-bundled .app) > TOML. Env stays the override of last resort
+    # so power users can swap keys ad-hoc without touching Keychain.
+    api_key = os.environ.get("NARA_API_KEY") or _read_keychain_key() or api_section.get("key")
     api_base_url = (
         os.environ.get("NARA_API_BASE_URL") or api_section.get("base_url") or DEFAULT_API_BASE_URL
     )
