@@ -13,12 +13,23 @@ Local build (after `pip install -e ".[mac]"`):
 Output: dist/NARA Archive.app
 """
 
+import sysconfig
 from pathlib import Path
 
 # Resolve relative to the project root regardless of where PyInstaller is
 # invoked from. SPECPATH is set by PyInstaller to the directory containing
 # this spec file.
 ROOT = Path(SPECPATH).parent.resolve()  # noqa: F821 — SPECPATH is injected by PyInstaller
+
+# Auto-detect: only ask for universal2 when the host Python is itself
+# universal2 (i.e. the python.org installer, NOT homebrew). When CI runs
+# this spec on a python.org universal2 Python, target_arch="universal2"
+# wins and we get a fat binary. When a developer runs `make app` locally
+# from a single-arch homebrew/asdf venv, target_arch falls back to None
+# and PyInstaller produces a host-architecture-only sanity build instead
+# of crashing on the first non-fat .so it bundles.
+_PLATFORM = sysconfig.get_platform()
+TARGET_ARCH = "universal2" if "universal2" in _PLATFORM else None
 
 # --- version + build number ----------------------------------------------
 
@@ -119,7 +130,7 @@ exe = EXE(  # noqa: F821
     upx=False,
     console=False,           # no Terminal window
     disable_windowed_traceback=False,
-    target_arch="universal2",  # requires a universal2 Python interpreter
+    target_arch=TARGET_ARCH,   # universal2 in CI, host-arch fallback locally
     codesign_identity=None,    # signing handled by build/sign-and-notarize.sh
     entitlements_file=None,
     icon=str(ROOT / "build" / "nara-archive.icns") if (ROOT / "build" / "nara-archive.icns").exists() else None,
