@@ -19,7 +19,12 @@ from .routes.jobs import router as jobs_router
 from .routes.library import router as library_router
 from .routes.presets import router as presets_router
 from .routes.search import router as search_router
-from .routes.setup import install_first_run_redirect, router as setup_router
+
+# Module is named ``firstrun`` (not ``setup``) so PyInstaller's analyser
+# doesn't treat it as a legacy packaging script and silently drop it from
+# the bundle — that exact regression cost us the v0.9.0-rc5 .app launch.
+# Route paths (``/setup``, ``/api/setup/*``) are unchanged.
+from .routes.firstrun import install_first_run_redirect, router as firstrun_router
 from .routes.updates import router as updates_router
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -63,7 +68,7 @@ def create_app(config: Config | None = None) -> FastAPI:
     pdfs_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/pdfs", StaticFiles(directory=str(pdfs_dir)), name="pdfs")
 
-    app.include_router(setup_router)
+    app.include_router(firstrun_router)
     install_first_run_redirect(app)
     app.include_router(search_router)
     app.include_router(jobs_router)

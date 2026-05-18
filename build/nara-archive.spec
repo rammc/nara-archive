@@ -87,7 +87,12 @@ hiddenimports = [
     "nara.server.routes.jobs",
     "nara.server.routes.library",
     "nara.server.routes.config",
-    "nara.server.routes.setup",
+    # Note: this module is *deliberately* named ``firstrun`` (not ``setup``)
+    # — PyInstaller's static analyser drops anything called ``setup.py``
+    # because it mistakes it for a legacy distutils script. Cost us
+    # v0.9.0-rc5: the bundle launched but /setup returned 404 because
+    # the module file simply wasn't there. Keep both pin and rename.
+    "nara.server.routes.firstrun",
     "nara.server.routes.presets",
     # macOS-only deps
     "rumps",

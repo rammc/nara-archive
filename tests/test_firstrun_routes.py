@@ -148,9 +148,9 @@ def test_complete_requires_terms_acknowledged(tmp_path, monkeypatch):
 def test_complete_persists_and_swaps_app_state(tmp_path, monkeypatch):
     monkeypatch.setattr(httpx, "AsyncClient", _stub_async_client_factory(status_code=200))
     # Force Keychain-write to be a no-op so we exercise the TOML-only path.
-    from nara.server.routes import setup as setup_mod
+    from nara.server.routes import firstrun as firstrun_mod
 
-    monkeypatch.setattr(setup_mod, "_save_to_keychain", lambda _key: False)
+    monkeypatch.setattr(firstrun_mod, "_save_to_keychain", lambda _key: False)
 
     cfg = _config(tmp_path, api_key=None)
     # Use a non-default config_path so write_config doesn't touch the user's real home.

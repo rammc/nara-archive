@@ -10,6 +10,12 @@ for them. This module mirrors that wizard in HTTP form:
 
 Middleware installed by :func:`nara.server.app.create_app` short-circuits
 unconfigured runs by redirecting other HTML routes to ``/setup``.
+
+The module is named ``firstrun`` rather than ``setup`` on purpose:
+PyInstaller's static analyser treats ``setup.py`` as a legacy distutils /
+setuptools entry point and silently drops it from the bundle. The
+v0.9.0-rc5 .app launched cleanly but every ``/setup`` request returned 404
+because the module file simply wasn't there. Keep this name.
 """
 
 from __future__ import annotations
