@@ -63,9 +63,16 @@ class _ServerThread(threading.Thread):
 
 
 def _build_app():
-    """Import-time work deferred so non-darwin systems can still import this module."""
-    from ..config import resolve_config
-    from ..server import create_app
+    """Import-time work deferred so non-darwin systems can still import this module.
+
+    Uses absolute imports (``nara.…`` not ``..…``) because PyInstaller runs
+    this script as ``__main__`` without a package context — relative imports
+    fall over with "attempted relative import with no known parent package"
+    inside the bundled .app while still working fine under
+    ``python -m nara.macapp.main``.
+    """
+    from nara.config import resolve_config
+    from nara.server import create_app
 
     cfg = resolve_config()
     return create_app(cfg), cfg
@@ -121,8 +128,10 @@ def _wait_for_port(host: str, port: int, *, timeout: float) -> None:
 
 
 def _version() -> str:
+    # Same absolute-import reason as _build_app(): relative form breaks in the
+    # PyInstaller-bundled .app (entry script runs without a __package__).
     try:
-        from .. import __version__
+        from nara import __version__
 
         return __version__
     except Exception:  # noqa: BLE001
