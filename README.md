@@ -295,6 +295,7 @@ To **stop the server**, switch back to the terminal window and press
 | `command not found: python3` (after installing Python on Windows) | The "Add Python to PATH" checkbox was missed during install. Re-run the Python installer, untick everything except that checkbox, and click "Modify". |
 | The browser doesn't open after `nara serve` | The server is still running — just open <http://127.0.0.1:8765> manually in any browser. |
 | `pipx: command not found` | pipx was installed but `pipx ensurepath` wasn't run, or the terminal wasn't reopened. Do both. |
+| `command not found: brew` on macOS, even though Homebrew installed cleanly | Apple-Silicon Macs (M1/M2/M3/M4) put brew at `/opt/homebrew/`, which isn't on the default `PATH`. The Homebrew installer prints a "Next steps" block at the end with the exact lines — if you missed it, run: <br>`echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile` <br>`eval "$(/opt/homebrew/bin/brew shellenv)"` <br>then close & reopen the terminal. `brew --version` should now print a version number. |
 | `nara init` says my key is invalid | Double-check there are no extra spaces around the key. If NARA emailed it within quotes, copy only the characters inside the quotes. |
 | Anything else | Copy the exact error message and [open an issue](https://github.com/rammc/nara-archive/issues). Include your operating system. |
 
