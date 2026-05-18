@@ -43,10 +43,15 @@ fi
 rm -f "$DMG_OUT"
 
 echo "==> creating $DMG_OUT"
+# ``${VAR[@]+"${VAR[@]}"}`` is the safe-expansion idiom for empty bash arrays
+# under ``set -u`` — without it, an unset optional flag list errors with
+# "unbound variable" the moment we expand the array. Both flag arrays here
+# are populated conditionally (icon / background may be missing on a fresh
+# checkout); we always want their absence to mean "skip this flag".
 create-dmg \
   --volname "NARA Archive" \
-  "${VOLICON_OPT[@]}" \
-  "${BG_OPT[@]}" \
+  "${VOLICON_OPT[@]+"${VOLICON_OPT[@]}"}" \
+  "${BG_OPT[@]+"${BG_OPT[@]}"}" \
   --window-pos 200 120 \
   --window-size 600 380 \
   --icon-size 100 \
