@@ -1,10 +1,20 @@
 name: release
 
+# Manual-only until PyPI Trusted Publishing is configured on
+# https://pypi.org/manage/account/publishing/. Auto-trigger on every
+# ``v*`` tag was creating one failing "pypi" deployment per RC tag —
+# see the Deployments tab. Re-enable the tag trigger only after the
+# very first manual ``workflow_dispatch`` run lands a green release.
+#
+# Final-release tags (``v0.4.0``, ``v1.0.0``) will be filtered through
+# the explicit pattern below so RC tags (``v0.9.0-rc7``) can never
+# trip this workflow.
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
+  # Disabled until first successful PyPI publish via workflow_dispatch:
+  # push:
+  #   tags:
+  #     - "v[0-9]+.[0-9]+.[0-9]+"   # excludes -rc, -beta, -alpha
 
 jobs:
   build:
