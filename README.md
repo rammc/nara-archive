@@ -1,10 +1,18 @@
 # nara archive
 
 [![CI](https://github.com/rammc/nara-archive/actions/workflows/test.yml/badge.svg)](https://github.com/rammc/nara-archive/actions/workflows/test.yml)
-[![PyPI](https://img.shields.io/pypi/v/nara-archive.svg)](https://pypi.org/project/nara-archive/)
-[![Python](https://img.shields.io/pypi/pyversions/nara-archive.svg)](https://pypi.org/project/nara-archive/)
+[![macOS DMG](https://img.shields.io/github/v/release/rammc/nara-archive?include_prereleases&label=mac%20DMG&color=d97706)](https://github.com/rammc/nara-archive/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+
+<!--
+PyPI badges are intentionally absent until `nara-archive` is published
+on PyPI. Once the first PyPI release ships, add:
+  [![PyPI](https://img.shields.io/pypi/v/nara-archive.svg)](https://pypi.org/project/nara-archive/)
+  [![Python](https://img.shields.io/pypi/pyversions/nara-archive.svg)](https://pypi.org/project/nara-archive/)
+-->
+
 
 Bulk-download every digital object under a [NARA Catalog](https://catalog.archives.gov/)
 parent NAID, assemble one consolidated PDF per File Unit, and browse the
@@ -48,9 +56,58 @@ you can spend time reading the records, not glueing JSON together.
 - **Regex-based topic filter** (`nara filter`) — carve a subset out of a
   giant Series and download only that.
 - **Cooperative cancellation, resumable downloads, rotating logs.**
+- **Two distribution paths** — a signed + notarized [macOS .app](#option-a--macos-app-no-terminal-needed)
+  for users who never want to see a terminal, plus a
+  [pipx CLI](#option-b--python-cli-via-pipx-cross-platform) for Linux,
+  Windows, Intel Macs, and anyone who prefers `nara serve` from a shell.
 - **Zero telemetry, no cloud sync.** Server binds to `127.0.0.1` by default.
 
 ## Installation
+
+Two paths — pick whichever fits.
+
+- **Option A — [macOS app via DMG](#option-a--macos-app-no-terminal-needed)**: drag-and-drop
+  install, no terminal, Apple Silicon (M1/M2/M3/M4) Macs only. Easiest for
+  non-technical users.
+- **Option B — [Python CLI via pipx](#option-b--python-cli-via-pipx-cross-platform)**:
+  works on macOS (Intel + Apple Silicon), Linux, and Windows. Same web UI,
+  same features, you just start it from a terminal once.
+
+Both options give you the same `http://127.0.0.1:8765` web UI and the
+same on-disk layout under `~/.nara/`. You can swap between them later
+without losing any data.
+
+### Option A — macOS app (no terminal needed)
+
+1. **Download the latest DMG** from the project's
+   [releases page](https://github.com/rammc/nara-archive/releases/latest).
+   The file is called `NARA-Archive-x.y.z.dmg` (≈ 35 MB).
+2. **Open the DMG.** A small Finder window appears with the **NARA Archive**
+   app icon next to an **Applications** shortcut.
+3. **Drag the app onto the Applications shortcut.** macOS copies the
+   bundle into `/Applications`. On first install this can take up to
+   **2 minutes** while Gatekeeper re-validates every file in the bundle —
+   the progress bar may say "Copying 0 items" near the end; that's normal,
+   wait it out.
+4. **Eject the DMG** (right-click → Eject in the Finder sidebar).
+5. **Launch the app** from `/Applications/NARA Archive`. A small **"N"**
+   icon appears in the menu bar (top-right of the screen), and your
+   default browser opens to `http://127.0.0.1:8765`.
+6. **First-run setup runs in the browser** — paste your NARA API key
+   ([how to request one](#getting-a-nara-api-key)), confirm the output
+   directory, tick the NARA-terms acknowledgment, click *Get started*.
+
+To **quit**, click the menu-bar **"N"** icon → **Quit**. The local server
+shuts down cleanly. Launch again any time from `/Applications`.
+
+**Requirements:**
+- macOS 11 (Big Sur) or newer
+- **Apple Silicon (M1/M2/M3/M4)** — Intel Macs aren't supported yet by
+  the DMG. Intel users go to [Option B](#option-b--python-cli-via-pipx-cross-platform).
+- The app is signed by Apple Developer ID and notarized, so you won't
+  see any *"developer cannot be verified"* dialog.
+
+### Option B — Python CLI via pipx (cross-platform)
 
 > **Already comfortable with the terminal and pipx?**
 > `pipx install nara-archive` and skip to [First steps](#first-steps).
@@ -59,14 +116,14 @@ This section walks through installation from scratch. It assumes you have
 **no prior programming experience**. Everything below is copy-paste — you
 do not need to memorise any of it.
 
-### What you'll be doing
+#### What you'll be doing
 
 In plain language: you'll open a small "command window" and run **six
 short commands** that download and set up the program. Each command takes
 a few seconds. After that, the tool runs in your regular web browser like
 any other website.
 
-### What you need
+#### What you need
 
 - A computer running **macOS**, **Windows**, or **Linux**.
 - About **15 minutes** for first-time setup (5 minutes if Python is
@@ -82,7 +139,7 @@ You do **not** need to be a programmer. You can't break your computer by
 mistyping a command in the terminal — at worst you'll see a polite error
 message and try again.
 
-### A note about copy-pasting commands
+#### A note about copy-pasting commands
 
 When you copy a command from this README, copy only the command itself
 (e.g. `python3 --version`) — never the `$` or `>` symbols that some
@@ -97,7 +154,7 @@ After pasting, press <kbd>Enter</kbd> (also called <kbd>Return</kbd>) to
 run the command. The terminal will print some text in response. When it's
 done, you'll see a fresh blank line waiting for the next command.
 
-### Step 1 — Open the terminal
+#### Step 1 — Open the terminal
 
 The "terminal" is a window where you type commands instead of clicking
 buttons. It looks intimidating but it's just a text-only window. You'll
@@ -129,7 +186,7 @@ cursor waiting for input.
 Keep this window open for the rest of the installation. You'll alternate
 between reading this README in your browser and typing commands here.
 
-### Step 2 — Check whether Python is already installed
+#### Step 2 — Check whether Python is already installed
 
 `nara-archive` is written in Python. Many computers (especially Macs and
 Linux machines) already have it. Let's check.
@@ -152,7 +209,7 @@ to [Step 4](#step-4--install-pipx).
 **If you see an error** like `command not found` or `Python was not
 found`, or a version **below 3.11**, continue with Step 3.
 
-### Step 3 — Install Python (only if Step 2 failed)
+#### Step 3 — Install Python (only if Step 2 failed)
 
 **macOS:**
 - Easiest: install [Homebrew](https://brew.sh) (paste the one-line
@@ -182,7 +239,7 @@ won't show as you type it.)
 After installing, **close the terminal and open a new one**, then re-run
 the check from Step 2 to confirm.
 
-### Step 4 — Install `pipx`
+#### Step 4 — Install `pipx`
 
 `pipx` is a small helper that installs Python applications cleanly,
 keeping each one in its own little sandbox so they don't conflict with
@@ -218,7 +275,7 @@ opened terminals. If you skip this, the next command will fail with
 The official pipx guide is at <https://pipx.pypa.io/stable/installation/>
 if you want more detail.
 
-### Step 5 — Install nara-archive
+#### Step 5 — Install nara-archive
 
 In your fresh terminal window, type:
 
@@ -249,7 +306,7 @@ You should see a list of available commands (`init`, `serve`, `presets`,
 not found", you almost certainly forgot to close and reopen the terminal
 after `pipx ensurepath` — do that now and try again.
 
-### Step 6 — First-run setup
+#### Step 6 — First-run setup
 
 ```bash
 nara init
@@ -265,7 +322,7 @@ This launches a friendly interactive wizard that:
 If you don't have a key yet, see [Getting a NARA API key](#getting-a-nara-api-key)
 below. You can re-run `nara init` later once the key arrives.
 
-### Step 7 — Launch the web UI
+#### Step 7 — Launch the web UI
 
 ```bash
 nara serve
@@ -287,7 +344,7 @@ To **stop the server**, switch back to the terminal window and press
 <kbd>Ctrl</kbd>+<kbd>C</kbd>. You can launch it again any time with
 `nara serve`.
 
-### If something doesn't work
+#### If something doesn't work
 
 | You see… | What to do |
 | --- | --- |
@@ -299,16 +356,25 @@ To **stop the server**, switch back to the terminal window and press
 | `nara init` says my key is invalid | Double-check there are no extra spaces around the key. If NARA emailed it within quotes, copy only the characters inside the quotes. |
 | Anything else | Copy the exact error message and [open an issue](https://github.com/rammc/nara-archive/issues). Include your operating system. |
 
-### Updating to a newer version
+#### Updating to a newer version
 
 ```bash
 pipx upgrade nara-archive
 ```
 
-### Uninstalling
+For the macOS app (Option A): download the newer DMG from the
+[releases page](https://github.com/rammc/nara-archive/releases/latest)
+and drag the new app onto Applications — overwrites the old install.
+Your config under `~/.nara/` is preserved.
+
+#### Uninstalling
 
 ```bash
+# Option B (pipx):
 pipx uninstall nara-archive
+
+# Option A (macOS app):
+# Drag /Applications/NARA Archive to the Trash.
 ```
 
 Your downloaded PDFs and configuration live under `~/.nara/`. Delete that
@@ -448,10 +514,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development workflow.
 - ~~OCR pass with `ocrmypdf`.~~ ✓ Shipped — see [OCR](#ocr).
 - ~~User-extensible presets via `~/.nara/presets.json`.~~ ✓ Shipped — see
   [Custom presets](#custom-presets).
-- Signed macOS `.app` distributed via `.dmg` (in progress — code merged,
-  awaiting first release tag — see [`docs/RELEASE.md`](docs/RELEASE.md)).
-  Early DMGs ship **Apple Silicon only**; Intel support via a parallel
-  `macos-13` build + `lipo`-merge is a follow-up.
+- ~~Signed macOS `.app` distributed via `.dmg`.~~ ✓ Shipped — see
+  [Option A](#option-a--macos-app-no-terminal-needed) and
+  [`docs/RELEASE.md`](docs/RELEASE.md). Currently
+  **Apple Silicon only**; Intel-Mac build via a parallel `macos-13`
+  + `lipo`-merge job is the next macOS-side item.
+- **Publish to PyPI** so `pipx install nara-archive` works without a
+  source clone. Trusted-publishing workflow lives at
+  `.github/workflows/release.yml`; first publish is a manual gating
+  step before adding the PyPI badge back to the README.
 - Optional sibling tool against the AWS Open Data S3 mirror for
   full-archive workloads.
 
