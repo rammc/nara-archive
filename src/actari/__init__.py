@@ -1,3 +1,3 @@
-"""actari — bulk-download NARA Catalog objects and assemble PDFs."""
+"""actari — local research companion for the U.S. National Archives Catalog."""
 
-__version__ = "0.3.0"
+__version__ = "1.0.0"

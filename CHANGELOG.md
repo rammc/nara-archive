@@ -5,45 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — 2026-05-21 — Renamed to **actari**
+## [Unreleased]
 
-### ⚠ Breaking changes
+## [1.0.0] — 2026-05-21
 
-The project's public name changed from **`nara-archive`** to **`actari`**.
-Rationale: the previous name carried trademark risk with the U.S. National
-Archives and Records Administration ("NARA"); `actari` (Latin: *acta* =
-records, *agere* = to act) is a clean, distinctive name with verified
-availability on PyPI, NPM, and major domains. The tool's behaviour is
-unchanged.
+First stable release.
 
-- **CLI command renamed:** `nara <subcommand>` → `actari <subcommand>`.
-- **Bundle identifier renamed:** `dev.cramm.nara-archive` → `dev.cramm.actari`.
-  The macOS `.app` is now `actari.app` (was `NARA Archive.app`).
-- **macOS Keychain service renamed:** existing bundled-app users need to
-  re-paste their NARA API key once on first launch. The /setup wizard
-  surfaces this automatically when the old key isn't found.
-- **Config directory renamed:** `~/.nara/` → `~/.actari/`. **Auto-migration
-  on first launch** moves the entire directory tree (config, manifests,
-  jobs.json, raw scans, PDFs) intact; no user action required, no backup
-  taken. The migration helper is removed in the first post-v1.0 release.
+### Highlights
+
+- Local web UI with **Discovery**, **Downloads**, and **Library** tabs,
+  served at `http://127.0.0.1:8765`.
+- **Signed, notarized macOS DMG** — drag-to-Applications, no Gatekeeper
+  warning, no terminal required.
+- **Bulk download** of NARA record series as one consolidated PDF per
+  File Unit, with state tracking, resumable runs, and atomic writes.
+- **Optional OCR text layer** on the assembled PDFs via ocrmypdf +
+  Tesseract; defaults to English + German for the captured-records corpus.
+- **Optional image recompression** — shrinks output PDFs 5–10× while
+  keeping typewritten text readable.
+- **macOS Keychain integration** for API-key storage in the bundled app
+  (TOML still used for pipx installs).
+- **Curated starter searches** (8 bundled, plus user-extensible via
+  `~/.actari/presets.json`) targeting IG-Farben / WWII industrial /
+  Nuremberg-trials research.
+- **Friendly first-run wizard** + welcome banner; empty-state hints on
+  every tab.
+
+### Breaking changes from pre-1.0
+
+- **Project renamed** from `nara-archive` to `actari`
+  (Latin: *acta* = records, *agere* = to act). Old name carried potential
+  trademark concerns with the U.S. National Archives.
+- **CLI command:** `nara` → `actari`.
+- **Config directory:** `~/.nara/` → `~/.actari/` (auto-migrated on
+  first run; helper is removed in v2.0).
+- **macOS Bundle ID:** `dev.cramm.nara-archive` → `dev.cramm.actari`.
+- **macOS Keychain service** renamed; existing bundled-app users will be
+  prompted to re-enter their API key on first launch.
 - **DMG asset filename:** `NARA-Archive-x.y.z.dmg` → `actari-x.y.z.dmg`.
-- **PyPI distribution name** (once published): `actari` instead of
-  `nara-archive`. `pipx install nara-archive` will keep working on the
-  previously-installed CLI but cannot pull new releases — re-install via
-  `pipx install actari`.
 - **Repository moved:** <https://github.com/rammc/nara-archive> →
   <https://github.com/rammc/actari>. GitHub's automatic redirects keep
-  old URLs working, but bookmarks should be updated.
+  old URLs working; bookmarks should be updated.
+
+### Why "actari"?
+
+The previous name carried trademark risk with the U.S. National Archives
+and Records Administration (NARA). The new name is etymologically
+grounded in archival work without any institutional attachment, and was
+verified available on PyPI, npm, and major domain registrars.
+
+The string **"NARA"** still refers to the U.S. National Archives and
+Records Administration throughout the code, docs, and UI — only the
+project / CLI / bundle identifiers changed.
 
 ### Notes
 
-- The string **"NARA"** still refers to the U.S. National Archives and
-  Records Administration throughout the code, docs, and UI. Only the
-  project / CLI / bundle identifiers were renamed.
 - Three env vars previously prefixed `NARA_*` for tool-internal use are
   now `ACTARI_*`: `ACTARI_HOME`, `ACTARI_DEFAULT_RATE`,
-  `ACTARI_FORCE_KEYCHAIN`. Power-user env vars that reference the agency's
-  actual API (`NARA_API_KEY`, `NARA_API_BASE_URL`) are unchanged.
+  `ACTARI_FORCE_KEYCHAIN`. Env vars that reference the agency's actual
+  API (`NARA_API_KEY`, `NARA_API_BASE_URL`) are unchanged.
+- `actari --version` flag added.
+- New OSS-project files: `CODE_OF_CONDUCT.md`, `SECURITY.md`,
+  `CITATION.cff`, GitHub issue + PR templates.
 
 ## [0.3.0] - 2026-05-16
 

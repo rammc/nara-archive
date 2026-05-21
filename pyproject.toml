@@ -1,6 +1,6 @@
 [project]
 name = "actari"
-version = "0.3.0"
+version = "1.0.0"
 description = "Your local research companion for the U.S. National Archives Catalog: bulk-download digital objects, assemble per-File-Unit PDFs, and browse it all in a local web UI. Not affiliated with NARA."
 readme = "README.md"
 requires-python = ">=3.11"
