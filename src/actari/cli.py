@@ -40,6 +40,14 @@ OUTPUT_DIR_HELP = (
 _state: dict[str, bool] = {"verbose": False}
 
 
+def _print_version(value: bool) -> None:
+    if value:
+        from . import __version__
+
+        typer.echo(f"actari {__version__}")
+        raise typer.Exit(0)
+
+
 @app.callback()
 def _global_options(
     verbose: bool = typer.Option(
@@ -48,10 +56,19 @@ def _global_options(
         "-v",
         help="DEBUG-level logging to console and file (applies to all subcommands).",
     ),
+    version: bool = typer.Option(
+        False,
+        "--version",
+        help="Print the actari version and exit.",
+        callback=_print_version,
+        is_eager=True,
+    ),
 ) -> None:
     """Global flags applied before any subcommand."""
     if verbose:
         _state["verbose"] = True
+    # ``version`` is handled by the eager callback above; nothing else to do here.
+    _ = version
 
 
 def _bootstrap(output_dir: Path | None = None, *, verbose: bool = False) -> OutputPaths:
