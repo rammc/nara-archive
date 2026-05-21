@@ -1,5 +1,5 @@
 // Settings tab: read /api/config (key always masked), PATCH non-secret
-// fields, reveal the ~/.nara folder in the platform file manager.
+// fields, reveal the ~/.actari folder in the platform file manager.
 
 (function () {
   const $ = (s) => document.querySelector(s);
@@ -18,13 +18,13 @@
       : "";
     $("#kv-apikey").innerHTML = cfg.has_api_key
       ? `configured (${escapeHtml(cfg.api_key_masked || "")})${keychainBadge}`
-      : "missing — run <code>nara init</code> or visit /setup";
+      : "missing — run <code>actari init</code> or visit /setup";
     $("#kv-apibase").textContent = cfg.api_base_url;
     $("#kv-output").textContent = cfg.output_dir;
     $("#kv-configpath").textContent = cfg.config_path || "(none — using env / .env)";
     $("#kv-terms").textContent = cfg.terms_acknowledged
       ? `yes${cfg.acknowledged_at ? ` (${cfg.acknowledged_at})` : ""}`
-      : "no — run `nara init`";
+      : "no — run `actari init`";
     $("#set-rate").value = cfg.default_rate;
     $("#set-autobrowser").checked = !!cfg.auto_open_browser;
     const resetBtn = $("#settings-reset-key");

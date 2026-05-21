@@ -78,7 +78,7 @@ def download_all(
 
     if metadata is None:
         if not paths.metadata.exists():
-            raise FileNotFoundError(f"{paths.metadata} not found — run `nara metadata` first.")
+            raise FileNotFoundError(f"{paths.metadata} not found — run `actari metadata` first.")
         metadata = json.loads(paths.metadata.read_text(encoding="utf-8"))
 
     units = metadata.get("file_units", [])

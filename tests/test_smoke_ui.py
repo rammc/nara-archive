@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
-from nara.config import Config
+from actari.config import Config
 
 
 def _config(tmp_path) -> Config:
@@ -25,7 +25,7 @@ def _config(tmp_path) -> Config:
 
 @pytest.fixture
 def client(tmp_path):
-    from nara.server import create_app
+    from actari.server import create_app
 
     app = create_app(_config(tmp_path))
     return TestClient(app)
@@ -44,7 +44,7 @@ def test_health_endpoint(client):
 def test_health_reflects_missing_key(tmp_path):
     cfg = _config(tmp_path)
     cfg = Config(**{**cfg.__dict__, "api_key": None})
-    from nara.server import create_app
+    from actari.server import create_app
 
     c = TestClient(create_app(cfg))
     body = c.get("/api/health").json()

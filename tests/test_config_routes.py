@@ -7,8 +7,8 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from nara.config import Config, write_config
-from nara.server import create_app
+from actari.config import Config, write_config
+from actari.server import create_app
 
 
 def _config(tmp_path: Path, *, persist: bool = False) -> Config:
@@ -109,7 +109,7 @@ def test_reveal_invokes_platform_opener(tmp_path, monkeypatch):
     c = TestClient(app)
     r = c.post("/api/config/reveal")
     assert r.status_code == 200, r.text
-    assert r.json()["opened"].endswith("nara") or "config.toml" not in r.json()["opened"]
+    assert r.json()["opened"].endswith("actari") or "config.toml" not in r.json()["opened"]
     assert len(calls) == 1
     assert calls[0][0] == "open"
 
@@ -147,7 +147,7 @@ def test_reset_key_clears_api_key_and_returns_204(tmp_path, monkeypatch):
         calls.append("delete")
         return True
 
-    from nara.server.routes import config as config_routes
+    from actari.server.routes import config as config_routes
 
     monkeypatch.setattr(config_routes, "delete_keychain_key", fake_delete)
 
@@ -169,7 +169,7 @@ def test_config_dto_reports_keychain_inactive_on_linux(tmp_path):
     c = TestClient(app)
     body = c.get("/api/config").json()
     # In the test suite (running from a venv, not frozen), keychain is inactive
-    # regardless of platform unless NARA_FORCE_KEYCHAIN is set.
+    # regardless of platform unless ACTARI_FORCE_KEYCHAIN is set.
     assert body["keychain_active"] is False
 
 

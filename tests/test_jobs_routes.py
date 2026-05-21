@@ -7,9 +7,9 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from nara.config import Config
-from nara.jobs import JobManager
-from nara.server import create_app
+from actari.config import Config
+from actari.jobs import JobManager
+from actari.server import create_app
 
 
 def _config(tmp_path: Path) -> Config:
@@ -103,7 +103,7 @@ def _app_with_mocked_manager(tmp_path):
 def test_full_jobs_lifecycle(tmp_path, monkeypatch):
     # Patch the manager factory so any JobManager created inside the lifespan
     # gets the fast runners instead of the real downloader / pdfbuild.
-    import nara.jobs as jobs_mod
+    import actari.jobs as jobs_mod
 
     monkeypatch.setattr(jobs_mod, "DEFAULT_RUNNERS", _runners())
 
@@ -152,7 +152,7 @@ def test_full_jobs_lifecycle(tmp_path, monkeypatch):
 
 
 def test_delete_unknown_returns_404(tmp_path, monkeypatch):
-    import nara.jobs as jobs_mod
+    import actari.jobs as jobs_mod
 
     monkeypatch.setattr(jobs_mod, "DEFAULT_RUNNERS", _runners())
     app = create_app(_config(tmp_path))
@@ -162,7 +162,7 @@ def test_delete_unknown_returns_404(tmp_path, monkeypatch):
 
 
 def test_post_validation_filter_requires_name(tmp_path, monkeypatch):
-    import nara.jobs as jobs_mod
+    import actari.jobs as jobs_mod
 
     monkeypatch.setattr(jobs_mod, "DEFAULT_RUNNERS", _runners())
     app = create_app(_config(tmp_path))

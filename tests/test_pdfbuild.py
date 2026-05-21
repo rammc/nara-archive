@@ -8,7 +8,7 @@ import pypdf
 import pytest
 from PIL import Image
 
-from nara.pdfbuild import (
+from actari.pdfbuild import (
     DEFAULT_OCR_LANGUAGE,
     RECOMPRESS_MAX_DIM,
     RECOMPRESS_QUALITY,

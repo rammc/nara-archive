@@ -7,8 +7,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from nara.cli import app
-from nara.metadata import SCHEMA_VERSION, normalize_response
+from actari.cli import app
+from actari.metadata import SCHEMA_VERSION, normalize_response
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample_response.json"
 

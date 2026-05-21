@@ -17,11 +17,11 @@
 
 PROJECT_ROOT := $(shell pwd)
 DIST_DIR     := $(PROJECT_ROOT)/dist
-APP          := $(DIST_DIR)/NARA Archive.app
-ICONSET      := $(PROJECT_ROOT)/build/nara-archive.iconset
-ICNS         := $(PROJECT_ROOT)/build/nara-archive.icns
-VERSION      := $(shell python -c "import importlib.util,pathlib; s=pathlib.Path('src/nara/__init__.py').read_text(); ns={}; exec(s, ns); print(ns['__version__'])")
-DMG          := $(DIST_DIR)/NARA-Archive-$(VERSION).dmg
+APP          := $(DIST_DIR)/actari.app
+ICONSET      := $(PROJECT_ROOT)/build/actari.iconset
+ICNS         := $(PROJECT_ROOT)/build/actari.icns
+VERSION      := $(shell python -c "import importlib.util,pathlib; s=pathlib.Path('src/actari/__init__.py').read_text(); ns={}; exec(s, ns); print(ns['__version__'])")
+DMG          := $(DIST_DIR)/actari-$(VERSION).dmg
 
 PYTHON ?= python
 
@@ -40,13 +40,13 @@ $(ICONSET)/icon_512x512.png:
 	@echo "generating placeholder icons (replace with real artwork later)…"
 	@$(PYTHON) build/generate-placeholder-icons.py
 
-app: icons  ## build dist/NARA Archive.app via PyInstaller
+app: icons  ## build dist/actari.app via PyInstaller
 	@$(MAKE) check-arch
 	@rm -rf "$(DIST_DIR)" build/work
-	@pyinstaller --noconfirm --workpath build/work --distpath "$(DIST_DIR)" build/nara-archive.spec
+	@pyinstaller --noconfirm --workpath build/work --distpath "$(DIST_DIR)" build/actari.spec
 	@echo
 	@echo "Built: $(APP)"
-	@file "$(APP)/Contents/MacOS/nara-archive"
+	@file "$(APP)/Contents/MacOS/actari"
 
 check-arch:  ## warn if the host Python isn't universal2
 	@PY_ARCHES=$$($(PYTHON) -c "import sysconfig; print(sysconfig.get_platform())"); \
@@ -64,5 +64,5 @@ dmg:  ## create + sign + notarize the DMG (requires create-dmg + Apple creds)
 	@bash build/dmg.sh "$(DMG)" "$(APP)"
 
 clean:  ## remove build/, dist/, generated icons
-	@rm -rf build/work build/nara-archive.icns build/nara-archive.iconset/*.png "$(DIST_DIR)"
+	@rm -rf build/work build/actari.icns build/actari.iconset/*.png "$(DIST_DIR)"
 	@echo "cleaned."

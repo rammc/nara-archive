@@ -79,7 +79,7 @@ def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-_LOGGER_NAME = "nara"
+_LOGGER_NAME = "actari"
 
 
 def setup_logging(run_log: Path, *, verbose: bool = False) -> logging.Logger:

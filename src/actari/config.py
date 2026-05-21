@@ -1,14 +1,14 @@
-"""Resolve runtime config from env, project .env, and ~/.nara/config.toml.
+"""Resolve runtime config from env, project .env, and ~/.actari/config.toml.
 
 Resolution order (first match wins) per source:
   api_key/base_url/rate:
-    1. environment variable (NARA_API_KEY, NARA_API_BASE_URL, NARA_DEFAULT_RATE)
+    1. environment variable (NARA_API_KEY, NARA_API_BASE_URL, ACTARI_DEFAULT_RATE)
     2. .env in current working directory (loaded into env by dotenv)
-    3. ~/.nara/config.toml
+    3. ~/.actari/config.toml
   output_dir:
     1. explicit ``--output-dir`` flag (handled by caller)
     2. ./output if it already exists (back-compat for project-local installs)
-    3. ~/.nara/output
+    3. ~/.actari/output
 
 This module is the single source of truth — no other module should call
 ``os.getenv`` for NARA-related values.
@@ -16,6 +16,7 @@ This module is the single source of truth — no other module should call
 
 from __future__ import annotations
 
+import logging
 import os
 import tomllib
 from dataclasses import dataclass, field, replace
@@ -31,11 +32,46 @@ DEFAULT_SERVER_PORT = 8765
 
 
 def user_config_dir() -> Path:
-    """Return ``~/.nara``. Honours ``NARA_HOME`` env var for testability."""
-    override = os.environ.get("NARA_HOME")
+    """Return ``~/.actari``. Honours ``ACTARI_HOME`` env var for testability."""
+    override = os.environ.get("ACTARI_HOME")
     if override:
         return Path(override).expanduser().resolve()
-    return Path.home() / ".nara"
+    return Path.home() / ".actari"
+
+
+def _maybe_migrate_legacy_home() -> None:
+    """Move ``~/.nara/`` → ``~/.actari/`` when the rename ships.
+
+    Pre-v1.0 users have everything under the legacy ``~/.nara/`` directory:
+    config, manifests, jobs.json, raw scans, PDFs. On first launch under the
+    new name we transparently rename the directory so nothing visible changes
+    for them. No backup is taken — the move is atomic enough on the same
+    filesystem and the source path is gone afterwards.
+
+    The migration is a no-op when:
+      * ``ACTARI_HOME`` is set (custom location, user is on their own)
+      * ``~/.actari/`` already exists (already migrated, or both side-by-side)
+      * ``~/.nara/`` does not exist (fresh install)
+
+    This whole helper can be deleted in the first post-v1.0 release.
+    """
+    if os.environ.get("ACTARI_HOME"):
+        return
+    legacy = Path.home() / ".nara"
+    new = Path.home() / ".actari"
+    if not legacy.exists() or new.exists():
+        return
+    try:
+        import shutil
+
+        shutil.move(str(legacy), str(new))
+        logging.getLogger("actari").info(
+            "Migrated config from ~/.nara/ to ~/.actari/ (one-time rename)."
+        )
+    except OSError as e:
+        logging.getLogger("actari").warning(
+            "Could not migrate ~/.nara/ → ~/.actari/: %s. Old data is untouched.", e
+        )
 
 
 def user_config_path() -> Path:
@@ -98,7 +134,7 @@ def _maybe_load_dotenv() -> None:
 # installed, all three helpers return ``None`` / no-op so calling code stays
 # branch-free.
 
-KEYCHAIN_SERVICE = "dev.cramm.nara-archive"
+KEYCHAIN_SERVICE = "dev.cramm.actari"
 KEYCHAIN_ACCOUNT = "api_key"
 
 
@@ -110,7 +146,7 @@ def _keychain_available() -> bool:
         return False
     # In a pip-installed CLI we honour TOML first to keep the existing workflow.
     # Only the bundled .app should prefer Keychain reads.
-    if not getattr(sys, "frozen", False) and not os.environ.get("NARA_FORCE_KEYCHAIN"):
+    if not getattr(sys, "frozen", False) and not os.environ.get("ACTARI_FORCE_KEYCHAIN"):
         return False
     try:
         import keyring  # noqa: F401 — probe
@@ -147,7 +183,18 @@ def delete_keychain_key() -> bool:
 
 def _resolve_output_dir(toml_value: str | None) -> Path:
     if toml_value:
-        return Path(toml_value).expanduser().resolve()
+        p = Path(toml_value).expanduser().resolve()
+        # Post-rename safety net: if the TOML was written before the
+        # nara-archive → actari rename and still points into ~/.nara/, but the
+        # data has since been migrated to ~/.actari/, transparently rewrite
+        # the path. Same one-time-only shim as ``_maybe_migrate_legacy_home``.
+        legacy = (Path.home() / ".nara").resolve()
+        try:
+            relative = p.relative_to(legacy)
+        except ValueError:
+            return p
+        rewritten = (Path.home() / ".actari" / relative).resolve()
+        return rewritten if rewritten.exists() else p
     cwd_output = Path.cwd() / "output"
     if cwd_output.exists():
         return cwd_output.resolve()
@@ -156,6 +203,10 @@ def _resolve_output_dir(toml_value: str | None) -> Path:
 
 def resolve_config(*, load_dotenv: bool = True) -> Config:
     """Build a Config from all sources in precedence order."""
+    # One-time legacy-path migration runs *before* any disk reads — once it
+    # returns, all subsequent lookups operate on the new ~/.actari/ tree.
+    _maybe_migrate_legacy_home()
+
     if load_dotenv:
         _maybe_load_dotenv()
 
@@ -176,7 +227,7 @@ def resolve_config(*, load_dotenv: bool = True) -> Config:
     )
     try:
         default_rate = float(
-            os.environ.get("NARA_DEFAULT_RATE") or api_section.get("default_rate") or DEFAULT_RATE
+            os.environ.get("ACTARI_DEFAULT_RATE") or api_section.get("default_rate") or DEFAULT_RATE
         )
     except (TypeError, ValueError):
         default_rate = DEFAULT_RATE
@@ -221,7 +272,7 @@ def write_config(
     """Serialize a fresh config.toml. Returns the path written.
 
     Refuses to clobber by default? Caller decides — this writes unconditionally
-    via an atomic temp+rename. ``nara init`` is the only caller and prompts
+    via an atomic temp+rename. ``actari init`` is the only caller and prompts
     before invoking us when a config already exists.
     """
     target = target or user_config_path()
@@ -237,8 +288,8 @@ def write_config(
         return s.replace("\\", "\\\\").replace('"', '\\"')
 
     lines = [
-        "# nara-archive config — generated by `nara init`.",
-        "# Edit by hand at your own risk; `nara init --reset` to start over.",
+        "# actari config — generated by `actari init`.",
+        "# Edit by hand at your own risk; `actari init --reset` to start over.",
         "",
         "[api]",
         f'key = "{_esc(api_key)}"',
@@ -268,7 +319,7 @@ def write_config(
 
 
 def detect_legacy_env() -> Path | None:
-    """If a project-local .env exists and ~/.nara/config.toml doesn't, return its path."""
+    """If a project-local .env exists and ~/.actari/config.toml doesn't, return its path."""
     cwd_env = Path.cwd() / ".env"
     if cwd_env.exists() and not user_config_path().exists():
         return cwd_env

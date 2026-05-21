@@ -1,18 +1,21 @@
-# nara archive
+# actari — your local research companion for the U.S. National Archives Catalog
 
-[![CI](https://github.com/rammc/nara-archive/actions/workflows/test.yml/badge.svg)](https://github.com/rammc/nara-archive/actions/workflows/test.yml)
-[![macOS DMG](https://img.shields.io/github/v/release/rammc/nara-archive?include_prereleases&label=mac%20DMG&color=d97706)](https://github.com/rammc/nara-archive/releases/latest)
+[![CI](https://github.com/rammc/actari/actions/workflows/test.yml/badge.svg)](https://github.com/rammc/actari/actions/workflows/test.yml)
+[![macOS DMG](https://img.shields.io/github/v/release/rammc/actari?include_prereleases&label=mac%20DMG&color=d97706)](https://github.com/rammc/actari/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
-<!--
-PyPI badges are intentionally absent until `nara-archive` is published
-on PyPI. Once the first PyPI release ships, add:
-  [![PyPI](https://img.shields.io/pypi/v/nara-archive.svg)](https://pypi.org/project/nara-archive/)
-  [![Python](https://img.shields.io/pypi/pyversions/nara-archive.svg)](https://pypi.org/project/nara-archive/)
--->
+> **Disclaimer:** **actari** is not affiliated with or endorsed by the
+> U.S. National Archives and Records Administration (NARA). It uses
+> NARA's public Catalog API under their published terms of use.
 
+<!--
+PyPI badges are intentionally absent until `actari` is published
+on PyPI. Once the first PyPI release ships, add:
+  [![PyPI](https://img.shields.io/pypi/v/actari.svg)](https://pypi.org/project/actari/)
+  [![Python](https://img.shields.io/pypi/pyversions/actari.svg)](https://pypi.org/project/actari/)
+-->
 
 Bulk-download every digital object under a [NARA Catalog](https://catalog.archives.gov/)
 parent NAID, assemble one consolidated PDF per File Unit, and browse the
@@ -30,7 +33,7 @@ stills used for the README; the GIF stitches them.
 
 NARA's Catalog API is excellent but low-level: paginated JSON, no batch
 downloads, no PDF assembly, no local index. Historians, genealogists, and
-researchers end up writing throwaway scripts. `nara-archive` replaces those
+researchers end up writing throwaway scripts. `actari` replaces those
 scripts with a small, well-tested pipeline plus an optional local UI — so
 you can spend time reading the records, not glueing JSON together.
 
@@ -38,13 +41,13 @@ you can spend time reading the records, not glueing JSON together.
 
 - **Three-phase pipeline** — metadata fetch → bulk download → PDF assembly,
   with state tracking, resumable runs, and atomic writes.
-- **Local web UI** (`nara serve`) — Discovery (live search with downloadability
+- **Local web UI** (`actari serve`) — Discovery (live search with downloadability
   badges and Record Group filter), Downloads (one-click job creation, live
   progress, cancel/restart, inline PDF list, "Reveal in Finder"), Library
   (manifests with in-browser PDF preview), Settings (masked key, editable rate).
-- **Curated starter searches** (`nara presets`) — 8 hand-picked entry points
+- **Curated starter searches** (`actari presets`) — 8 hand-picked entry points
   for IG Farben / WWII industrial / Nuremberg-trials research, plus your own
-  via [`~/.nara/presets.json`](#custom-presets).
+  via [`~/.actari/presets.json`](#custom-presets).
 - **Optional image recompression** ([`--recompress`](#recompression)) —
   shrinks output PDFs 5–10× while keeping typewritten text readable.
 - **Optional OCR text layer** ([`--ocr`](#ocr)) — searchable PDFs via
@@ -53,13 +56,13 @@ you can spend time reading the records, not glueing JSON together.
 - **Leaf-record fallback** — if you select a single-record NAID with its own
   digital objects, the pipeline treats it as a one-file-unit job rather than
   failing silently.
-- **Regex-based topic filter** (`nara filter`) — carve a subset out of a
+- **Regex-based topic filter** (`actari filter`) — carve a subset out of a
   giant Series and download only that.
 - **Cooperative cancellation, resumable downloads, rotating logs.**
 - **Two distribution paths** — a signed + notarized [macOS .app](#option-a--macos-app-no-terminal-needed)
   for users who never want to see a terminal, plus a
   [pipx CLI](#option-b--python-cli-via-pipx-cross-platform) for Linux,
-  Windows, Intel Macs, and anyone who prefers `nara serve` from a shell.
+  Windows, Intel Macs, and anyone who prefers `actari serve` from a shell.
 - **Zero telemetry, no cloud sync.** Server binds to `127.0.0.1` by default.
 
 ## Installation
@@ -74,15 +77,15 @@ Two paths — pick whichever fits.
   same features, you just start it from a terminal once.
 
 Both options give you the same `http://127.0.0.1:8765` web UI and the
-same on-disk layout under `~/.nara/`. You can swap between them later
+same on-disk layout under `~/.actari/`. You can swap between them later
 without losing any data.
 
 ### Option A — macOS app (no terminal needed)
 
 1. **Download the latest DMG** from the project's
-   [releases page](https://github.com/rammc/nara-archive/releases/latest).
-   The file is called `NARA-Archive-x.y.z.dmg` (≈ 35 MB).
-2. **Open the DMG.** A small Finder window appears with the **NARA Archive**
+   [releases page](https://github.com/rammc/actari/releases/latest).
+   The file is called `actari-x.y.z.dmg` (≈ 35 MB).
+2. **Open the DMG.** A small Finder window appears with the **actari**
    app icon next to an **Applications** shortcut.
 3. **Drag the app onto the Applications shortcut.** macOS copies the
    bundle into `/Applications`. On first install this can take up to
@@ -90,7 +93,7 @@ without losing any data.
    the progress bar may say "Copying 0 items" near the end; that's normal,
    wait it out.
 4. **Eject the DMG** (right-click → Eject in the Finder sidebar).
-5. **Launch the app** from `/Applications/NARA Archive`. A small **"N"**
+5. **Launch the app** from `/Applications/actari`. A small **"N"**
    icon appears in the menu bar (top-right of the screen), and your
    default browser opens to `http://127.0.0.1:8765`.
 6. **First-run setup runs in the browser** — paste your NARA API key
@@ -110,7 +113,7 @@ shuts down cleanly. Launch again any time from `/Applications`.
 ### Option B — Python CLI via pipx (cross-platform)
 
 > **Already comfortable with the terminal and pipx?**
-> `pipx install nara-archive` and skip to [First steps](#first-steps).
+> `pipx install actari` and skip to [First steps](#first-steps).
 
 This section walks through installation from scratch. It assumes you have
 **no prior programming experience**. Everything below is copy-paste — you
@@ -188,7 +191,7 @@ between reading this README in your browser and typing commands here.
 
 #### Step 2 — Check whether Python is already installed
 
-`nara-archive` is written in Python. Many computers (especially Macs and
+`actari` is written in Python. Many computers (especially Macs and
 Linux machines) already have it. Let's check.
 
 In the terminal, type the command below and press <kbd>Enter</kbd>:
@@ -244,7 +247,7 @@ the check from Step 2 to confirm.
 `pipx` is a small helper that installs Python applications cleanly,
 keeping each one in its own little sandbox so they don't conflict with
 each other or with your system. It's the recommended way to install
-tools like `nara-archive`.
+tools like `actari`.
 
 Pick the line that matches your system and paste it into the terminal:
 
@@ -275,12 +278,12 @@ opened terminals. If you skip this, the next command will fail with
 The official pipx guide is at <https://pipx.pypa.io/stable/installation/>
 if you want more detail.
 
-#### Step 5 — Install nara-archive
+#### Step 5 — Install actari
 
 In your fresh terminal window, type:
 
 ```bash
-pipx install nara-archive
+pipx install actari
 ```
 
 You'll see several lines of output as pipx downloads the package and
@@ -289,16 +292,16 @@ connection. **What success looks like** — the last line will be
 something like:
 
 ```
-  installed package nara-archive 0.3.0, installed using Python 3.12.4
+  installed package actari 0.3.0, installed using Python 3.12.4
   These apps are now globally available
-    - nara
+    - actari
 done! ✨ 🌟 ✨
 ```
 
 Verify it worked:
 
 ```bash
-nara --help
+actari --help
 ```
 
 You should see a list of available commands (`init`, `serve`, `presets`,
@@ -309,27 +312,27 @@ after `pipx ensurepath` — do that now and try again.
 #### Step 6 — First-run setup
 
 ```bash
-nara init
+actari init
 ```
 
 This launches a friendly interactive wizard that:
 1. **Asks for your NARA API key** — paste it when prompted (the 40-character
    string NARA emailed you).
 2. **Validates the key** by making one test request to the Catalog API.
-3. **Saves it** to `~/.nara/config.toml` along with sensible defaults.
+3. **Saves it** to `~/.actari/config.toml` along with sensible defaults.
 4. **Asks you to accept** NARA's terms of use (one sentence, see below).
 
 If you don't have a key yet, see [Getting a NARA API key](#getting-a-nara-api-key)
-below. You can re-run `nara init` later once the key arrives.
+below. You can re-run `actari init` later once the key arrives.
 
 #### Step 7 — Launch the web UI
 
 ```bash
-nara serve
+actari serve
 ```
 
 Within a second or two, your default browser opens at
-<http://127.0.0.1:8765>. This is `nara-archive` running locally on your
+<http://127.0.0.1:8765>. This is `actari` running locally on your
 own machine — the page is not on the internet, only you can see it.
 
 From here on, you live in the browser:
@@ -342,42 +345,42 @@ From here on, you live in the browser:
 
 To **stop the server**, switch back to the terminal window and press
 <kbd>Ctrl</kbd>+<kbd>C</kbd>. You can launch it again any time with
-`nara serve`.
+`actari serve`.
 
 #### If something doesn't work
 
 | You see… | What to do |
 | --- | --- |
-| `command not found: nara` | Close the terminal, open a new one, and try again. If still failing, re-run `pipx ensurepath` then close & reopen the terminal. |
+| `command not found: actari` | Close the terminal, open a new one, and try again. If still failing, re-run `pipx ensurepath` then close & reopen the terminal. |
 | `command not found: python3` (after installing Python on Windows) | The "Add Python to PATH" checkbox was missed during install. Re-run the Python installer, untick everything except that checkbox, and click "Modify". |
-| The browser doesn't open after `nara serve` | The server is still running — just open <http://127.0.0.1:8765> manually in any browser. |
+| The browser doesn't open after `actari serve` | The server is still running — just open <http://127.0.0.1:8765> manually in any browser. |
 | `pipx: command not found` | pipx was installed but `pipx ensurepath` wasn't run, or the terminal wasn't reopened. Do both. |
 | `command not found: brew` on macOS, even though Homebrew installed cleanly | Apple-Silicon Macs (M1/M2/M3/M4) put brew at `/opt/homebrew/`, which isn't on the default `PATH`. The Homebrew installer prints a "Next steps" block at the end with the exact lines — if you missed it, run: <br>`echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile` <br>`eval "$(/opt/homebrew/bin/brew shellenv)"` <br>then close & reopen the terminal. `brew --version` should now print a version number. |
-| `nara init` says my key is invalid | Double-check there are no extra spaces around the key. If NARA emailed it within quotes, copy only the characters inside the quotes. |
-| Anything else | Copy the exact error message and [open an issue](https://github.com/rammc/nara-archive/issues). Include your operating system. |
+| `actari init` says my key is invalid | Double-check there are no extra spaces around the key. If NARA emailed it within quotes, copy only the characters inside the quotes. |
+| Anything else | Copy the exact error message and [open an issue](https://github.com/rammc/actari/issues). Include your operating system. |
 
 #### Updating to a newer version
 
 ```bash
-pipx upgrade nara-archive
+pipx upgrade actari
 ```
 
 For the macOS app (Option A): download the newer DMG from the
-[releases page](https://github.com/rammc/nara-archive/releases/latest)
+[releases page](https://github.com/rammc/actari/releases/latest)
 and drag the new app onto Applications — overwrites the old install.
-Your config under `~/.nara/` is preserved.
+Your config under `~/.actari/` is preserved.
 
 #### Uninstalling
 
 ```bash
 # Option B (pipx):
-pipx uninstall nara-archive
+pipx uninstall actari
 
 # Option A (macOS app):
-# Drag /Applications/NARA Archive to the Trash.
+# Drag /Applications/actari to the Trash.
 ```
 
-Your downloaded PDFs and configuration live under `~/.nara/`. Delete that
+Your downloaded PDFs and configuration live under `~/.actari/`. Delete that
 folder too if you want to remove everything, including your API key.
 
 ## First steps
@@ -393,18 +396,18 @@ Once installed and configured:
 3. **Library** — open the resulting manifest and read the assembled PDFs
    in a side panel.
 
-CLI commands are first-class too — `nara metadata`, `nara filter`,
-`nara download`, `nara build-pdfs`, `nara run`, `nara stats`, `nara verify`,
-`nara presets`. `nara --help` lists them all.
+CLI commands are first-class too — `actari metadata`, `actari filter`,
+`actari download`, `actari build-pdfs`, `actari run`, `actari stats`, `actari verify`,
+`actari presets`. `actari --help` lists them all.
 
 ## Getting a NARA API key
 
 The key is free for research and educational use.
 
 1. Visit <https://www.archives.gov/research/catalog/help/api>.
-2. Email **Catalog_API@nara.gov** describing your project (one or two
+2. Email **Catalog_API@actari.gov** describing your project (one or two
    sentences is enough — name, affiliation, intended use).
-3. They reply with a 40-character API key. Paste it into `nara init`.
+3. They reply with a 40-character API key. Paste it into `actari init`.
 
 ## NARA terms of use
 
@@ -413,7 +416,7 @@ The key is free for research and educational use.
 
 NARA grants 10,000 API requests per key per month and asks consumers to keep
 usage polite. For full-archive transfers (millions of files), they
-explicitly recommend the [AWS Open Data mirror](https://registry.opendata.aws/nara/)
+explicitly recommend the [AWS Open Data mirror](https://registry.opendata.aws/actari/)
 instead of the live API. This tool defaults to **0.5 seconds between
 requests** and never parallelises downloads.
 
@@ -440,16 +443,16 @@ suite. Out of scope (intentionally):
 
 ## Output structure
 
-Defaults to `~/.nara/output/` (overridable in `nara init`, or
+Defaults to `~/.actari/output/` (overridable in `actari init`, or
 `--output-dir` per command):
 
 ```
-~/.nara/
+~/.actari/
 ├── config.toml          # API key + preferences (chmod 600 recommended)
 ├── jobs.json            # job-history snapshot (persisted across restarts)
 └── output/
     ├── metadata.json
-    ├── metadata-{name}.json     # one per `nara filter` subset
+    ├── metadata-{name}.json     # one per `actari filter` subset
     ├── manifest.json            # consolidated catalog (search frontend input)
     ├── manifest-{name}.json     # per-subset manifest
     ├── state.json               # per-file download status
@@ -462,34 +465,34 @@ Defaults to `~/.nara/output/` (overridable in `nara init`, or
 ```
 
 Back-compat: if a `./output` folder already exists in your current
-directory, the CLI uses it instead of `~/.nara/output/`.
+directory, the CLI uses it instead of `~/.actari/output/`.
 
 ## CLI cheat sheet
 
 ```bash
 # Discovery + presets
-nara presets                                  # curated starter searches
-nara presets --path                           # print ~/.nara/presets.json location
-nara presets --bundled-only                   # ignore your custom presets file
+actari presets                                  # curated starter searches
+actari presets --path                           # print ~/.actari/presets.json location
+actari presets --bundled-only                   # ignore your custom presets file
 
 # Three-phase pipeline
-nara metadata --parent-naid 7840517           # Phase 1: fetch + normalize metadata
-nara filter --query "I\.?G\.?\s*Farben" --name igfarben
-nara download --metadata-file output/metadata-igfarben.json --rate 0.5
-nara build-pdfs --metadata-file output/metadata-igfarben.json
+actari metadata --parent-naid 7840517           # Phase 1: fetch + normalize metadata
+actari filter --query "I\.?G\.?\s*Farben" --name igfarben
+actari download --metadata-file output/metadata-igfarben.json --rate 0.5
+actari build-pdfs --metadata-file output/metadata-igfarben.json
 
 # Build with size reduction and/or OCR
-nara build-pdfs --recompress --force          # 5–10× smaller PDFs
-nara build-pdfs --ocr --ocr-language eng+deu  # searchable text layer
-nara build-pdfs --recompress --ocr --force    # both — recommended combo
+actari build-pdfs --recompress --force          # 5–10× smaller PDFs
+actari build-pdfs --ocr --ocr-language eng+deu  # searchable text layer
+actari build-pdfs --recompress --ocr --force    # both — recommended combo
 
 # End-to-end shortcut
-nara run --parent-naid 7840517 --recompress --ocr
+actari run --parent-naid 7840517 --recompress --ocr
 
 # Maintenance
-nara stats                                    # counts + error summary
-nara verify                                   # check manifest entries vs. disk
-nara serve                                    # local web UI
+actari stats                                    # counts + error summary
+actari verify                                   # check manifest entries vs. disk
+actari serve                                    # local web UI
 ```
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for module overview and
@@ -498,8 +501,8 @@ sequence diagrams.
 ## Development
 
 ```bash
-git clone https://github.com/rammc/nara-archive
-cd nara-archive
+git clone https://github.com/rammc/actari
+cd actari
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 pytest -q                # 100+ unit/integration tests
@@ -512,14 +515,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development workflow.
 
 - ~~Image recompression option.~~ ✓ Shipped — see [Recompression](#recompression).
 - ~~OCR pass with `ocrmypdf`.~~ ✓ Shipped — see [OCR](#ocr).
-- ~~User-extensible presets via `~/.nara/presets.json`.~~ ✓ Shipped — see
+- ~~User-extensible presets via `~/.actari/presets.json`.~~ ✓ Shipped — see
   [Custom presets](#custom-presets).
 - ~~Signed macOS `.app` distributed via `.dmg`.~~ ✓ Shipped — see
   [Option A](#option-a--macos-app-no-terminal-needed) and
   [`docs/RELEASE.md`](docs/RELEASE.md). Currently
   **Apple Silicon only**; Intel-Mac build via a parallel `macos-13`
   + `lipo`-merge job is the next macOS-side item.
-- **Publish to PyPI** so `pipx install nara-archive` works without a
+- **Publish to PyPI** so `pipx install actari` works without a
   source clone. Trusted-publishing workflow lives at
   `.github/workflows/release.yml`; first publish is a manual gating
   step before adding the PyPI badge back to the README.
@@ -527,7 +530,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development workflow.
   full-archive workloads.
 
 Issues and feature requests welcome at
-<https://github.com/rammc/nara-archive/issues>.
+<https://github.com/rammc/actari/issues>.
 
 ## Recompression
 
@@ -548,8 +551,8 @@ How to use it:
 
 ```bash
 # CLI
-nara build-pdfs --recompress --force        # --force needed to rebuild existing
-nara run --recompress --parent-naid 12345
+actari build-pdfs --recompress --force        # --force needed to rebuild existing
+actari run --recompress --parent-naid 12345
 
 # Web UI: Discovery → Download → tick "Recompress images during PDF assembly"
 ```
@@ -570,8 +573,8 @@ OCR is an optional extra because it pulls in heavy external dependencies.
 Install both the Python package and the system Tesseract binary:
 
 ```bash
-# 1. Add ocrmypdf to your pipx-installed nara-archive
-pipx inject nara-archive ocrmypdf
+# 1. Add ocrmypdf to your pipx-installed actari
+pipx inject actari ocrmypdf
 
 # 2. Install Tesseract + the language packs you want
 # macOS:
@@ -587,8 +590,8 @@ sudo apt install tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng
 
 ```bash
 # CLI — pair with --recompress for the smallest searchable PDFs
-nara build-pdfs --ocr --recompress --force
-nara run --ocr --ocr-language eng+deu --parent-naid 12345
+actari build-pdfs --ocr --recompress --force
+actari run --ocr --ocr-language eng+deu --parent-naid 12345
 
 # Web UI: Discovery → Download → tick "Add OCR text layer to assembled PDFs"
 # A language input appears (default eng+deu — Tesseract codes, '+' separated)
@@ -614,7 +617,7 @@ nara run --ocr --ocr-language eng+deu --parent-naid 12345
 ## Custom presets
 
 You can add your own starter searches without modifying the package.
-Create a file at `~/.nara/presets.json` (run `nara presets --path` to
+Create a file at `~/.actari/presets.json` (run `actari presets --path` to
 print the exact location) using the same shape as the bundled list:
 
 ```json
@@ -640,10 +643,10 @@ Rules:
 - An `id` that matches a bundled entry **overrides** it in-place.
 - The web UI tags user entries with a small "user" badge.
 - If the file is invalid JSON or fails validation, the web UI logs a
-  warning and falls back to bundled-only — your `~/.nara/presets.json`
+  warning and falls back to bundled-only — your `~/.actari/presets.json`
   never blanks the Starter-searches panel.
-- `nara presets` lists everything; `nara presets --bundled-only` skips
-  your file; `nara presets --path` prints the file location.
+- `actari presets` lists everything; `actari presets --bundled-only` skips
+  your file; `actari presets --path` prints the file location.
 
 ## Acknowledgments
 
@@ -687,10 +690,10 @@ to all of their maintainers.
   records themselves are works of the US government and, per
   [17 U.S.C. § 105](https://www.copyright.gov/title17/92chap1.html#105),
   not subject to copyright in the United States.
-- [NARA on AWS Open Data](https://registry.opendata.aws/nara/) — the
+- [NARA on AWS Open Data](https://registry.opendata.aws/actari/) — the
   recommended bulk mirror for full-archive workloads.
 
-If you ship a downstream project that uses `nara-archive`, please keep
+If you ship a downstream project that uses `actari`, please keep
 this acknowledgments list intact so the chain of credit stays visible.
 
 ## Citation
@@ -700,9 +703,9 @@ If you use this tool in academic or journalistic work, please cite it:
 ```bibtex
 @software{nara_archive,
   author  = {Ramm, Christopher},
-  title   = {nara-archive: bulk-download and PDF assembly for the NARA Catalog},
+  title   = {actari: bulk-download and PDF assembly for the NARA Catalog},
   year    = {2026},
-  url     = {https://github.com/rammc/nara-archive},
+  url     = {https://github.com/rammc/actari},
   version = {0.3.0}
 }
 ```
@@ -717,6 +720,6 @@ of use linked above for the (very permissive) rules that apply to them.
 
 ## Contributing
 
-Issues and PRs welcome at <https://github.com/rammc/nara-archive/issues>.
+Issues and PRs welcome at <https://github.com/rammc/actari/issues>.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for dev setup, tests, and PR
 checklist. A [changelog](CHANGELOG.md) lives alongside.

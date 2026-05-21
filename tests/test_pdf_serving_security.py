@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from nara.config import Config
-from nara.server import create_app
+from actari.config import Config
+from actari.server import create_app
 
 PDF_PROLOGUE = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n1 0 obj\n<< /Type /Catalog >>\nendobj\n"
 PDF_BODY = b"X" * 4096 + b"%%EOF\n"

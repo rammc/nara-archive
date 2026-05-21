@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Produce placeholder icons for the macOS .app bundle.
 
-Run when ``build/nara-archive.icns`` is missing so the PyInstaller build
+Run when ``build/actari.icns`` is missing so the PyInstaller build
 doesn't fail on a fresh checkout. The output is intentionally simple — a
 flat amber square with "N" centred — so it's visually obvious it's a
 placeholder and triggers the "design the icon" prompt for the maintainer.
@@ -10,11 +10,11 @@ Usage:
     python build/generate-placeholder-icons.py
 
 Output:
-    build/nara-archive.iconset/icon_{16,32,128,256,512}x{...}{,@2x}.png
+    build/actari.iconset/icon_{16,32,128,256,512}x{...}{,@2x}.png
     build/menubar-icon.png (22x22 black on transparent — for the menubar)
 
-After this, run `iconutil -c icns build/nara-archive.iconset \
-  -o build/nara-archive.icns` to produce the .icns file (the Makefile
+After this, run `iconutil -c icns build/actari.iconset \
+  -o build/actari.icns` to produce the .icns file (the Makefile
 does both steps automatically).
 """
 
@@ -31,7 +31,7 @@ except ImportError as e:  # pragma: no cover — Pillow is a hard dep
     ) from e
 
 ROOT = Path(__file__).resolve().parent
-ICONSET_DIR = ROOT / "nara-archive.iconset"
+ICONSET_DIR = ROOT / "actari.iconset"
 MENUBAR_PATH = ROOT / "menubar-icon.png"
 
 ACCENT = (217, 119, 6, 255)  # matches the web UI's accent colour
@@ -110,9 +110,7 @@ def main() -> int:
     print(f"writing menubar template icon → {MENUBAR_PATH}")
     make_menubar_icon(44, MENUBAR_PATH)
 
-    print(
-        "done. Run `iconutil -c icns build/nara-archive.iconset -o build/nara-archive.icns` next."
-    )
+    print("done. Run `iconutil -c icns build/actari.iconset -o build/actari.icns` next.")
     return 0
 
 

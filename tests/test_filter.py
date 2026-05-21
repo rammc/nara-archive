@@ -7,15 +7,15 @@ from pathlib import Path
 
 import pytest
 
-from nara.filter import (
+from actari.filter import (
     FilterError,
     apply_filter,
     compile_pattern,
     filter_file_units,
     make_filter_doc,
 )
-from nara.metadata import SCHEMA_VERSION, normalize_response
-from nara.utils import OutputPaths
+from actari.metadata import SCHEMA_VERSION, normalize_response
+from actari.utils import OutputPaths
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample_response.json"
 

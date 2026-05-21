@@ -354,7 +354,7 @@
         .map((p) => {
           const userTag =
             p.source === "user"
-              ? ` <span class="preset-source-tag" title="From your ~/.nara/presets.json">user</span>`
+              ? ` <span class="preset-source-tag" title="From your ~/.actari/presets.json">user</span>`
               : "";
           return `<button type="button" class="preset-chip"
             data-preset-id="${escapeHtml(p.id)}"

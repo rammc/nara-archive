@@ -1,4 +1,4 @@
-"""Tests for the nara init interactive wizard.
+"""Tests for the actari init interactive wizard.
 
 The wizard talks to rich.prompt.Prompt/Confirm.ask and to a key validator
 that hits NARA. Both are monkey-patched to keep tests fast and offline.
@@ -11,15 +11,15 @@ import pytest
 import tomllib
 from rich.console import Console
 
-from nara import init_wizard
-from nara.init_wizard import WizardAborted, run_wizard
+from actari import init_wizard
+from actari.init_wizard import WizardAborted, run_wizard
 
 
 @pytest.fixture
 def isolated_home(tmp_path, monkeypatch):
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("NARA_HOME", str(home))
+    monkeypatch.setenv("ACTARI_HOME", str(home))
     return home
 
 

@@ -17,7 +17,7 @@ from .config import DEFAULT_API_BASE_URL, resolve_config
 
 # Kept for back-compat with code that imports API_BASE from .api.
 API_BASE = DEFAULT_API_BASE_URL
-USER_AGENT = "nara-archive/0.1 (+https://github.com/rammc/nara-archive)"
+USER_AGENT = "actari/0.1 (+https://github.com/rammc/actari)"
 
 
 class NaraApiError(RuntimeError):
@@ -65,7 +65,7 @@ class NaraClient:
         base_url = base or cfg.api_base_url
         if not key:
             raise NaraApiError(
-                "NARA_API_KEY is not set. Run `nara init`, or export "
+                "NARA_API_KEY is not set. Run `actari init`, or export "
                 "NARA_API_KEY in your shell, or put it in a project-local .env."
             )
         self._key = key

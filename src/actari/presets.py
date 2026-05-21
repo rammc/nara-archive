@@ -1,11 +1,11 @@
 """Curated starter searches shipped with the package + user extensions.
 
-The bundled file (``src/nara/data/presets.json``) is a fixed list of
+The bundled file (``src/actari/data/presets.json``) is a fixed list of
 hand-curated entry points into NARA's catalog — currently weighted toward
 IG-Farben / WWII war-crimes research.
 
 Users can extend or override the bundle by placing a same-shape JSON file
-at ``~/.nara/presets.json``. An entry whose ``id`` matches a bundled one
+at ``~/.actari/presets.json``. An entry whose ``id`` matches a bundled one
 replaces the bundled entry in-place; new ids are appended. The loader
 tags each entry with ``source`` (``"bundled"`` or ``"user"``) so the UI
 can flag overrides.
@@ -102,7 +102,7 @@ def load_presets(*, path: Path | None = None) -> list[dict[str, Any]]:
 
 
 def user_presets_path() -> Path:
-    """Location of the optional user presets file (``~/.nara/presets.json``)."""
+    """Location of the optional user presets file (``~/.actari/presets.json``)."""
     # Imported lazily to avoid a circular import on module load.
     from .config import user_config_dir
 

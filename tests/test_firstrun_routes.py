@@ -9,8 +9,8 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from nara.config import Config
-from nara.server import create_app
+from actari.config import Config
+from actari.server import create_app
 
 
 def _config(tmp_path: Path, *, api_key: str | None = None) -> Config:
@@ -61,7 +61,7 @@ def test_get_setup_serves_html_when_unconfigured(tmp_path):
     r = c.get("/setup", headers={"accept": "text/html"})
     assert r.status_code == 200, r.text
     assert "<html" in r.text.lower()
-    assert "nara archive" in r.text.lower()
+    assert "actari archive" in r.text.lower()
 
 
 def test_get_setup_redirects_when_already_configured(tmp_path):
@@ -94,7 +94,7 @@ def test_static_assets_pass_through_during_setup(tmp_path):
 def test_api_traffic_during_setup_is_not_redirected(tmp_path):
     """JSON clients bypass the setup-redirect middleware so existing 503/401
     semantics from the route handlers survive (e.g. /api/search → 503 with
-    'Run `nara init`' hint)."""
+    'Run `actari init`' hint)."""
     app = create_app(_config(tmp_path, api_key=None))
     c = TestClient(app, follow_redirects=False)
     r = c.get("/api/library", headers={"accept": "application/json"})
@@ -148,7 +148,7 @@ def test_complete_requires_terms_acknowledged(tmp_path, monkeypatch):
 def test_complete_persists_and_swaps_app_state(tmp_path, monkeypatch):
     monkeypatch.setattr(httpx, "AsyncClient", _stub_async_client_factory(status_code=200))
     # Force Keychain-write to be a no-op so we exercise the TOML-only path.
-    from nara.server.routes import firstrun as firstrun_mod
+    from actari.server.routes import firstrun as firstrun_mod
 
     monkeypatch.setattr(firstrun_mod, "_save_to_keychain", lambda _key: False)
 
@@ -193,5 +193,5 @@ def test_complete_revalidates_key_against_nara(tmp_path, monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _isolate_nara_home(tmp_path, monkeypatch):
-    """Stop tests writing into ~/.nara when complete() goes through the TOML branch."""
-    monkeypatch.setenv("NARA_HOME", str(tmp_path / "nara-home"))
+    """Stop tests writing into ~/.actari when complete() goes through the TOML branch."""
+    monkeypatch.setenv("ACTARI_HOME", str(tmp_path / "actari-home"))

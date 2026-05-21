@@ -17,7 +17,7 @@ function showTab(name) {
     if (panel) panel.hidden = t !== name;
     if (link) link.classList.toggle("active", t === name);
   }
-  document.title = `nara archive · ${name}`;
+  document.title = `actari archive · ${name}`;
 }
 
 window.addEventListener("hashchange", () => showTab(activeTabFromHash()));

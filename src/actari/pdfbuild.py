@@ -157,8 +157,8 @@ def ocr_pdf_in_place(pdf_path: Path, *, language: str = DEFAULT_OCR_LANGUAGE) ->
     except ImportError as e:
         raise OcrDependencyError(
             "OCR requested but ocrmypdf is not installed. "
-            "Install the extra with `pipx inject nara-archive ocrmypdf` "
-            "(or `pip install 'nara-archive[ocr]'`). "
+            "Install the extra with `pipx inject actari ocrmypdf` "
+            "(or `pip install 'actari[ocr]'`). "
             "You also need Tesseract on the system: `brew install tesseract` "
             "on macOS, `apt install tesseract-ocr tesseract-ocr-deu` on Debian/Ubuntu."
         ) from e
@@ -379,7 +379,7 @@ def build_pdfs(
             continue
 
         source_size_total = sum(p.stat().st_size for (p, _o) in ordered if p.exists())
-        with tempfile.TemporaryDirectory(prefix=f"nara-{naid}-") as work:
+        with tempfile.TemporaryDirectory(prefix=f"actari-{naid}-") as work:
             try:
                 page_count = assemble_pdf(
                     [p for (p, _o) in ordered],

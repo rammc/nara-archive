@@ -35,7 +35,7 @@ from .metadata import fetch_and_persist
 from .pdfbuild import build_pdfs
 from .utils import OutputPaths, atomic_write_text, manifest_path_for, utc_now_iso
 
-log = logging.getLogger("nara")
+log = logging.getLogger("actari")
 
 SCHEMA_VERSION = 1
 
@@ -168,7 +168,7 @@ class JobManager:
         self._persist()
         for jid in requeued:
             self._queue.put_nowait(jid)
-        self._worker_task = asyncio.create_task(self._worker_loop(), name="nara-job-worker")
+        self._worker_task = asyncio.create_task(self._worker_loop(), name="actari-job-worker")
 
     async def shutdown(self) -> None:
         """Cancel the worker and any in-flight job; jobs.json is left intact."""

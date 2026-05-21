@@ -9,14 +9,14 @@ from fastapi import APIRouter, HTTPException
 from ...presets import PresetError, load_all_presets, load_presets
 from ..models import Preset, PresetListResponse
 
-log = logging.getLogger("nara")
+log = logging.getLogger("actari")
 router = APIRouter(prefix="/api/presets", tags=["presets"])
 
 
 @router.get("", response_model=PresetListResponse)
 def list_presets() -> PresetListResponse:
     """Return merged bundled + user presets. Falls back to bundled-only on
-    user-file errors so a typo in ``~/.nara/presets.json`` never blanks the UI.
+    user-file errors so a typo in ``~/.actari/presets.json`` never blanks the UI.
     """
     try:
         data = load_all_presets()

@@ -22,11 +22,11 @@ git push --tags` plus a 15-minute wait for Apple's notary service.
 
 - [ ] **Base64-encode the `.p12`** so it survives the GitHub Secrets store:
   ```bash
-  base64 -i ~/Downloads/nara-cert.p12 | pbcopy
+  base64 -i ~/Downloads/actari-cert.p12 | pbcopy
   ```
 
 - [ ] **Generate an App-Specific Password** at https://appleid.apple.com
-  → Sign In → App-Specific Passwords → "+". Label it `nara-archive-notary`.
+  → Sign In → App-Specific Passwords → "+". Label it `actari-notary`.
 
 - [ ] **Find your Team ID** at https://developer.apple.com/account → Membership.
   Ten-character string, e.g. `AB12CD34EF`.
@@ -49,12 +49,12 @@ git push --tags` plus a 15-minute wait for Apple's notary service.
   git tag v0.9.0-rc1
   git push origin v0.9.0-rc1
   ```
-  Watch the workflow at `https://github.com/rammc/nara-archive/actions`.
+  Watch the workflow at `https://github.com/rammc/actari/actions`.
   First runs typically fail twice on certificate plumbing — budget for it.
 
 ## Cutting a real release
 
-1. Bump `__version__` in `src/nara/__init__.py` and `pyproject.toml`.
+1. Bump `__version__` in `src/actari/__init__.py` and `pyproject.toml`.
 2. Update `CHANGELOG.md`.
 3. Commit: `chore: bump to vX.Y.Z`.
 4. Tag and push:
@@ -87,7 +87,7 @@ Macs (pre-2020) can't run the resulting `.app`.
 
 Roadmap: add a parallel build on `macos-13` (Intel) and merge the two
 `.app` bundles with `lipo` in a follow-up job. Until then, Intel users
-fall back to the `pipx install nara-archive` CLI path.
+fall back to the `pipx install actari` CLI path.
 
 ## Local dry-run
 
@@ -95,7 +95,7 @@ fall back to the `pipx install nara-archive` CLI path.
 # Generates placeholder icons + builds an unsigned arm64-only .app for testing
 make app
 
-# Right-click the resulting dist/NARA Archive.app → Open → Open (bypasses
+# Right-click the resulting dist/actari.app → Open → Open (bypasses
 # Gatekeeper for THIS user only). Browser opens; setup wizard appears.
 ```
 

@@ -1,5 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec for the nara-archive macOS .app bundle.
+"""PyInstaller spec for the actari macOS .app bundle.
 
 Hand-written (not auto-generated) so the BUNDLE step's Info.plist stays
 under version control. Universal2 output only happens when the host
@@ -8,9 +8,9 @@ installer in CI, NOT homebrew Python.
 
 Local build (after `pip install -e ".[mac]"`):
 
-    pyinstaller build/nara-archive.spec
+    pyinstaller build/actari.spec
 
-Output: dist/NARA Archive.app
+Output: dist/actari.app
 """
 
 from pathlib import Path
@@ -39,7 +39,7 @@ TARGET_ARCH = None
 
 # Read the package version straight out of src/ to keep CFBundle* in sync.
 ABOUT: dict[str, str] = {}
-exec((ROOT / "src" / "nara" / "__init__.py").read_text(), ABOUT)
+exec((ROOT / "src" / "actari" / "__init__.py").read_text(), ABOUT)
 VERSION = ABOUT.get("__version__", "0.0.0")
 BUILD_NUMBER = ABOUT.get("__version__", "0.0.0").replace(".", "")
 
@@ -47,16 +47,16 @@ BUILD_NUMBER = ABOUT.get("__version__", "0.0.0").replace(".", "")
 
 # Entry script: the menubar wrapper, NOT cli.py. cli.py stays the pip-install
 # entry point and is unbundled.
-ENTRY = str(ROOT / "src" / "nara" / "macapp" / "main.py")
+ENTRY = str(ROOT / "src" / "actari" / "macapp" / "main.py")
 
-# Bundle every static asset under src/nara/server/static and src/nara/data
+# Bundle every static asset under src/actari/server/static and src/actari/data
 # verbatim — PyInstaller's auto-discovery only catches importable Python.
 datas = []
 for sub in ("server/static", "data"):
-    src_root = ROOT / "src" / "nara" / sub
+    src_root = ROOT / "src" / "actari" / sub
     for path in src_root.rglob("*"):
         if path.is_file():
-            datas.append((str(path), f"nara/{sub}/{path.relative_to(src_root).parent}"))
+            datas.append((str(path), f"actari/{sub}/{path.relative_to(src_root).parent}"))
 
 # --- hidden imports ------------------------------------------------------
 # PyInstaller's stdlib + entry-point traversal catches most things, but
@@ -83,17 +83,17 @@ hiddenimports = [
     "pydantic_core._pydantic_core",
     # Our routes are imported through string paths in the FastAPI factory;
     # explicit listing here is belt-and-braces.
-    "nara.server.routes.search",
-    "nara.server.routes.jobs",
-    "nara.server.routes.library",
-    "nara.server.routes.config",
+    "actari.server.routes.search",
+    "actari.server.routes.jobs",
+    "actari.server.routes.library",
+    "actari.server.routes.config",
     # Note: this module is *deliberately* named ``firstrun`` (not ``setup``)
     # — PyInstaller's static analyser drops anything called ``setup.py``
     # because it mistakes it for a legacy distutils script. Cost us
     # v0.9.0-rc5: the bundle launched but /setup returned 404 because
     # the module file simply wasn't there. Keep both pin and rename.
-    "nara.server.routes.firstrun",
-    "nara.server.routes.presets",
+    "actari.server.routes.firstrun",
+    "actari.server.routes.presets",
     # macOS-only deps
     "rumps",
     "keyring",
@@ -132,7 +132,7 @@ exe = EXE(  # noqa: F821
     a.scripts,
     [],
     exclude_binaries=True,
-    name="nara-archive",
+    name="actari",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -142,7 +142,7 @@ exe = EXE(  # noqa: F821
     target_arch=TARGET_ARCH,   # universal2 in CI, host-arch fallback locally
     codesign_identity=None,    # signing handled by build/sign-and-notarize.sh
     entitlements_file=None,
-    icon=str(ROOT / "build" / "nara-archive.icns") if (ROOT / "build" / "nara-archive.icns").exists() else None,
+    icon=str(ROOT / "build" / "actari.icns") if (ROOT / "build" / "actari.icns").exists() else None,
 )
 
 coll = COLLECT(  # noqa: F821
@@ -153,7 +153,7 @@ coll = COLLECT(  # noqa: F821
     strip=False,
     upx=False,
     upx_exclude=[],
-    name="nara-archive",
+    name="actari",
 )
 
 # --- BUNDLE: produce the .app ---
@@ -162,9 +162,9 @@ info_plist = {
     "LSUIElement": True,            # menubar app, no Dock icon
     "CFBundleShortVersionString": VERSION,
     "CFBundleVersion": BUILD_NUMBER,
-    "CFBundleIdentifier": "dev.cramm.nara-archive",
-    "CFBundleName": "NARA Archive",
-    "CFBundleDisplayName": "NARA Archive",
+    "CFBundleIdentifier": "dev.cramm.actari",
+    "CFBundleName": "actari",
+    "CFBundleDisplayName": "actari",
     "NSHumanReadableCopyright": "Copyright © 2026 Christopher Ramm. MIT License.",
     "LSMinimumSystemVersion": "11.0",
     "NSHighResolutionCapable": True,
@@ -177,8 +177,8 @@ info_plist = {
 
 app = BUNDLE(  # noqa: F821
     coll,
-    name="NARA Archive.app",
-    icon=str(ROOT / "build" / "nara-archive.icns") if (ROOT / "build" / "nara-archive.icns").exists() else None,
-    bundle_identifier="dev.cramm.nara-archive",
+    name="actari.app",
+    icon=str(ROOT / "build" / "actari.icns") if (ROOT / "build" / "actari.icns").exists() else None,
+    bundle_identifier="dev.cramm.actari",
     info_plist=info_plist,
 )

@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from nara.config import Config
-from nara.server import create_app
-from nara.server.routes.search import get_nara_client
+from actari.config import Config
+from actari.server import create_app
+from actari.server.routes.search import get_nara_client
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample_response.json"
@@ -241,7 +241,7 @@ def test_search_requires_non_empty_q(client_and_fake):
 
 
 def test_search_502_when_nara_unreachable(tmp_path):
-    from nara.api import NaraApiError
+    from actari.api import NaraApiError
 
     class BrokenClient(FakeNaraClient):
         def search(self, params):
@@ -294,4 +294,4 @@ def test_no_api_key_returns_503(tmp_path):
     c = TestClient(app)
     r = c.get("/api/search", params={"q": "x"})
     assert r.status_code == 503
-    assert "nara init" in r.json()["detail"].lower()
+    assert "actari init" in r.json()["detail"].lower()

@@ -1,4 +1,4 @@
-"""FastAPI app factory for the nara web UI."""
+"""FastAPI app factory for the actari web UI."""
 
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ def create_app(config: Config | None = None) -> FastAPI:
             await manager.shutdown()
 
     app = FastAPI(
-        title="nara-archive",
+        title="actari",
         version=__version__,
         docs_url=None,  # no /docs in the user-facing UI
         redoc_url=None,

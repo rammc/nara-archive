@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>nara archive</title>
+  <title>actari archive</title>
   <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <span class="brand-mark">nara</span>
+      <span class="brand-mark">actari</span>
       <span class="brand-sub">archive</span>
     </div>
     <nav class="tabs" id="tab-nav" aria-label="primary">
@@ -110,7 +110,7 @@
               <input id="job-ocr" type="checkbox">
               Add OCR text layer to assembled PDFs
             </label>
-            <p class="field-hint muted">Uses ocrmypdf + Tesseract. Requires <code>pipx inject nara-archive ocrmypdf</code> and a system Tesseract install — see README.</p>
+            <p class="field-hint muted">Uses ocrmypdf + Tesseract. Requires <code>pipx inject actari ocrmypdf</code> and a system Tesseract install — see README.</p>
           </div>
           <div class="field" id="job-ocr-language-wrap" hidden>
             <label for="job-ocr-language">OCR languages (Tesseract codes, '+' separated)</label>
@@ -181,11 +181,11 @@
           <input id="set-rate" type="number" min="0.1" max="60" step="0.1">
         </div>
         <div class="field">
-          <label><input id="set-autobrowser" type="checkbox"> Auto-open browser on `nara serve`</label>
+          <label><input id="set-autobrowser" type="checkbox"> Auto-open browser on `actari serve`</label>
         </div>
         <div class="actions">
           <button type="submit" class="btn-primary">Save</button>
-          <button type="button" id="settings-reveal">Open ~/.nara folder</button>
+          <button type="button" id="settings-reveal">Open ~/.actari folder</button>
           <button type="button" id="settings-reset-key" hidden>Reset API key…</button>
         </div>
         <p id="settings-msg" class="muted"></p>
@@ -204,7 +204,7 @@
     <span>·</span>
     <span id="footer-version">v0.0.0</span>
     <span>·</span>
-    <a href="https://github.com/rammc/nara-archive" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/rammc/actari" target="_blank" rel="noopener">GitHub</a>
   </footer>
 
   <script src="/static/app.js" defer></script>

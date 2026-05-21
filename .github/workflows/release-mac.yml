@@ -60,7 +60,7 @@ jobs:
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
           set -euo pipefail
-          KEYCHAIN_PATH="$RUNNER_TEMP/nara-release.keychain-db"
+          KEYCHAIN_PATH="$RUNNER_TEMP/actari-release.keychain-db"
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
@@ -112,7 +112,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/NARA-Archive-*.dmg
+          files: dist/actari-*.dmg
           generate_release_notes: true
           fail_on_unmatched_files: true
 
@@ -122,7 +122,7 @@ jobs:
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
           set -e
-          KEYCHAIN_PATH="$RUNNER_TEMP/nara-release.keychain-db"
+          KEYCHAIN_PATH="$RUNNER_TEMP/actari-release.keychain-db"
           if [[ -f "$KEYCHAIN_PATH" ]]; then
             security delete-keychain "$KEYCHAIN_PATH" || true
           fi

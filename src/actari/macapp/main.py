@@ -10,7 +10,7 @@ Lifecycle:
    shuts the loop down, and the background thread exits within a second or two.
 
 Designed to be both PyInstaller-bundled (``sys.frozen`` true) and runnable
-straight from a venv via ``python -m nara.macapp.main`` for development.
+straight from a venv via ``python -m actari.macapp.main`` for development.
 """
 
 from __future__ import annotations
@@ -22,12 +22,12 @@ import time
 import webbrowser
 from typing import Any
 
-log = logging.getLogger("nara.macapp")
+log = logging.getLogger("actari.macapp")
 
 
 def _require_darwin() -> None:
     if platform.system() != "Darwin":
-        raise SystemExit("nara.macapp is macOS-only. Use `nara serve` on Linux / Windows.")
+        raise SystemExit("actari.macapp is macOS-only. Use `actari serve` on Linux / Windows.")
 
 
 def _is_first_run(cfg: Any) -> bool:
@@ -39,7 +39,7 @@ class _ServerThread(threading.Thread):
     """Run uvicorn in a background thread and expose a graceful-shutdown hook."""
 
     def __init__(self, app, *, host: str, port: int):
-        super().__init__(daemon=True, name="nara-uvicorn")
+        super().__init__(daemon=True, name="actari-uvicorn")
         import uvicorn  # local import — keeps startup deferred under PyInstaller
 
         self._uv_config = uvicorn.Config(
@@ -65,21 +65,21 @@ class _ServerThread(threading.Thread):
 def _build_app():
     """Import-time work deferred so non-darwin systems can still import this module.
 
-    Uses absolute imports (``nara.…`` not ``..…``) because PyInstaller runs
+    Uses absolute imports (``actari.…`` not ``..…``) because PyInstaller runs
     this script as ``__main__`` without a package context — relative imports
     fall over with "attempted relative import with no known parent package"
     inside the bundled .app while still working fine under
-    ``python -m nara.macapp.main``.
+    ``python -m actari.macapp.main``.
     """
-    from nara.config import resolve_config
-    from nara.server import create_app
+    from actari.config import resolve_config
+    from actari.server import create_app
 
     cfg = resolve_config()
     return create_app(cfg), cfg
 
 
 def main() -> None:
-    """PyInstaller console_scripts entry point: ``nara-archive-app``."""
+    """PyInstaller console_scripts entry point: ``actari-app``."""
     _require_darwin()
     logging.basicConfig(level=logging.INFO)
 
@@ -94,7 +94,7 @@ def main() -> None:
     except ImportError as e:
         raise SystemExit(
             "rumps + PyObjC are required for the menubar app. Install with "
-            "`pip install nara-archive[mac]` or run `nara serve` instead."
+            "`pip install actari[mac]` or run `actari serve` instead."
         ) from e
 
     server = _ServerThread(app, host=host, port=port)
@@ -131,7 +131,7 @@ def _version() -> str:
     # Same absolute-import reason as _build_app(): relative form breaks in the
     # PyInstaller-bundled .app (entry script runs without a __package__).
     try:
-        from nara import __version__
+        from actari import __version__
 
         return __version__
     except Exception:  # noqa: BLE001
@@ -145,7 +145,7 @@ def _build_menubar_class():
     class NaraMenubarApp(rumps.App):
         def __init__(self, *, server: _ServerThread, landing_url: str, version: str):
             super().__init__(
-                name="nara",
+                name="actari",
                 title="NARA",
                 quit_button=None,  # custom Quit so we can shut uvicorn down cleanly
             )
@@ -166,11 +166,11 @@ def _build_menubar_class():
 
         def _show_status(self, _sender):
             rumps.alert(
-                title="NARA Archive",
+                title="actari",
                 message=(
                     f"Version {self._version}\n"
                     f"Local server: {self._landing_url}\n\n"
-                    "Logs in ~/.nara/output/run.log"
+                    "Logs in ~/.actari/output/run.log"
                 ),
                 ok="OK",
             )
@@ -180,7 +180,7 @@ def _build_menubar_class():
             # the menu mark gives the right affordance to the user.
             sender.state = not sender.state
             rumps.notification(
-                title="NARA Archive",
+                title="actari",
                 subtitle="Start-at-Login (preview)",
                 message="This setting is not yet persisted; will land in a future build.",
             )

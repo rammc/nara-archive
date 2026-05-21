@@ -9,9 +9,9 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from nara.config import Config
-from nara.server import create_app
-from nara.updater import UpdateInfo, check_for_update, is_newer
+from actari.config import Config
+from actari.server import create_app
+from actari.updater import UpdateInfo, check_for_update, is_newer
 
 
 def _config(tmp_path: Path, *, check_for_updates: bool = True) -> Config:
@@ -139,7 +139,7 @@ def test_api_updates_returns_default_when_disabled(tmp_path):
 
 def test_api_updates_reflects_startup_check(tmp_path, monkeypatch):
     """Force the lifespan check to set a known UpdateInfo and verify the route echoes it."""
-    import nara.server.app as app_module
+    import actari.server.app as app_module
 
     async def fake_check(current_version, **_kwargs):
         return UpdateInfo(
@@ -149,7 +149,7 @@ def test_api_updates_reflects_startup_check(tmp_path, monkeypatch):
             available=True,
         )
 
-    monkeypatch.setattr("nara.updater.check_for_update", fake_check)
+    monkeypatch.setattr("actari.updater.check_for_update", fake_check)
     # schedule_startup_check uses the SAME module-level name, so monkeypatch
     # affects the scheduled task too.
     _ = app_module  # keep import for clarity

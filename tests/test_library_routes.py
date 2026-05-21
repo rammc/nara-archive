@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from nara.config import Config
-from nara.server import create_app
+from actari.config import Config
+from actari.server import create_app
 
 
 def _config(tmp_path: Path) -> Config:

@@ -1,4 +1,4 @@
-"""Typer CLI for nara-archive."""
+"""Typer CLI for actari."""
 
 from __future__ import annotations
 
@@ -30,8 +30,10 @@ app = typer.Typer(no_args_is_help=True, add_completion=False, help=__doc__)
 
 DEFAULT_PARENT_NAID = "7840517"
 # When unset, ``_bootstrap`` derives the output dir from ``resolve_config()``:
-# back-compat first (./output if it exists), then ~/.nara/output.
-OUTPUT_DIR_HELP = "Where to write artefacts. Defaults to ./output if present, else ~/.nara/output."
+# back-compat first (./output if it exists), then ~/.actari/output.
+OUTPUT_DIR_HELP = (
+    "Where to write artefacts. Defaults to ./output if present, else ~/.actari/output."
+)
 
 # Module-level flag set by the Typer callback before any subcommand runs.
 # Per-command --verbose options OR the global --verbose flag both flip this on.
@@ -62,7 +64,7 @@ def _bootstrap(output_dir: Path | None = None, *, verbose: bool = False) -> Outp
     legacy = detect_legacy_env()
     if legacy is not None and not cfg.config_path:
         get_logger().info(
-            "found legacy .env at %s — consider running `nara init` to migrate to %s",
+            "found legacy .env at %s — consider running `actari init` to migrate to %s",
             legacy,
             user_config_path(),
         )
@@ -83,7 +85,7 @@ def _resolve_metadata_path(paths: OutputPaths, metadata_file: Optional[Path]) ->
     target = metadata_file if metadata_file is not None else paths.metadata
     if not target.exists():
         typer.echo(
-            f"error: {target} not found — run `nara metadata` (or `nara filter`) first.",
+            f"error: {target} not found — run `actari metadata` (or `actari filter`) first.",
             err=True,
         )
         raise typer.Exit(2)
@@ -174,7 +176,7 @@ def download(
     metadata_file: Optional[Path] = typer.Option(
         None,
         "--metadata-file",
-        help="Alternative metadata file (e.g. a subset from `nara filter`).",
+        help="Alternative metadata file (e.g. a subset from `actari filter`).",
     ),
     output_dir: Optional[Path] = typer.Option(None, "--output-dir", help=OUTPUT_DIR_HELP),
     verbose: bool = typer.Option(False, "--verbose", "-v"),
@@ -218,7 +220,7 @@ def build_pdfs_cmd(
     metadata_file: Optional[Path] = typer.Option(
         None,
         "--metadata-file",
-        help="Alternative metadata file (e.g. a subset from `nara filter`).",
+        help="Alternative metadata file (e.g. a subset from `actari filter`).",
     ),
     output_dir: Optional[Path] = typer.Option(None, "--output-dir", help=OUTPUT_DIR_HELP),
     verbose: bool = typer.Option(False, "--verbose", "-v"),
@@ -336,7 +338,7 @@ def stats(
         log.info("%s present, %s missing.", source_meta.name, manifest.name)
         log.info("file_units=%d digital_objects=%d", len(units), objs)
     else:
-        log.info("No %s or %s yet — run `nara metadata` first.", source_meta.name, manifest.name)
+        log.info("No %s or %s yet — run `actari metadata` first.", source_meta.name, manifest.name)
 
     if paths.errors_log.exists():
         n = sum(1 for _ in paths.errors_log.open("r", encoding="utf-8"))
@@ -381,7 +383,7 @@ def init(
     here: bool = typer.Option(
         False,
         "--here",
-        help="Write a project-local .env instead of ~/.nara/config.toml.",
+        help="Write a project-local .env instead of ~/.actari/config.toml.",
     ),
     reset: bool = typer.Option(
         False,
@@ -403,11 +405,10 @@ def init(
             )
             raise typer.Exit(2)
         target.write_text(
-            "# nara-archive config — fill in the key, then run any command.\n"
-            "NARA_API_KEY=replace-me\n",
+            "# actari config — fill in the key, then run any command.\nNARA_API_KEY=replace-me\n",
             encoding="utf-8",
         )
-        typer.echo(f"wrote {target} — set NARA_API_KEY there or run plain `nara init`")
+        typer.echo(f"wrote {target} — set NARA_API_KEY there or run plain `actari init`")
         return
 
     try:
@@ -429,7 +430,7 @@ def presets(
     show_path: bool = typer.Option(
         False,
         "--path",
-        help="Print the user presets file path (~/.nara/presets.json) and exit.",
+        help="Print the user presets file path (~/.actari/presets.json) and exit.",
     ),
     bundled_only: bool = typer.Option(
         False,
@@ -469,7 +470,7 @@ def presets(
     n_user = sum(1 for p in data if p.get("source") == "user")
     title = f"{len(data)} NARA presets"
     if n_user:
-        title += f" ({n_user} from your ~/.nara/presets.json)"
+        title += f" ({n_user} from your ~/.actari/presets.json)"
     table = Table(title=title, show_lines=True)
     table.add_column("id", style="bold")
     table.add_column("src", style="dim")
@@ -512,7 +513,7 @@ def serve(
 
     if not cfg.has_api_key:
         typer.echo(
-            "error: no NARA API key found. Run `nara init` first (or set NARA_API_KEY).",
+            "error: no NARA API key found. Run `actari init` first (or set NARA_API_KEY).",
             err=True,
         )
         raise typer.Exit(2)
@@ -533,7 +534,7 @@ def serve(
 
     app_ = create_app(cfg)
     url = f"http://{bind_host}:{bind_port}/"
-    typer.echo(f"nara web UI → {url}")
+    typer.echo(f"actari web UI → {url}")
 
     open_browser = (
         cfg.auto_open_browser and not no_browser and bind_host in ("127.0.0.1", "localhost", "::1")
@@ -548,7 +549,7 @@ def serve(
 
 
 def main() -> None:  # pragma: no cover
-    """Allow `python -m nara` to work alongside the console_scripts entry."""
+    """Allow `python -m actari` to work alongside the console_scripts entry."""
     try:
         app()
     except KeyboardInterrupt:

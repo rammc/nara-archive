@@ -9,16 +9,16 @@ import pytest
 from fastapi.testclient import TestClient
 from typer.testing import CliRunner
 
-from nara.cli import app as cli_app
-from nara.config import Config
-from nara.presets import (
+from actari.cli import app as cli_app
+from actari.config import Config
+from actari.presets import (
     DATA_FILE,
     PresetError,
     load_all_presets,
     load_presets,
     user_presets_path,
 )
-from nara.server import create_app
+from actari.server import create_app
 
 
 def _config(tmp_path: Path) -> Config:
@@ -149,18 +149,18 @@ def test_cli_presets_json_output_parses():
 
 
 def test_data_file_resides_inside_package():
-    """Sanity: the shipped JSON sits at src/nara/data/presets.json (gets packaged)."""
+    """Sanity: the shipped JSON sits at src/actari/data/presets.json (gets packaged)."""
     assert DATA_FILE.name == "presets.json"
     assert DATA_FILE.parent.name == "data"
-    assert DATA_FILE.parent.parent.name == "nara"
+    assert DATA_FILE.parent.parent.name == "actari"
 
 
 # --- user-extensible presets (roadmap #3) ---
 
 
 def test_user_presets_path_uses_nara_home(monkeypatch, tmp_path):
-    """user_presets_path() honours NARA_HOME — same convention as user_config_dir."""
-    monkeypatch.setenv("NARA_HOME", str(tmp_path))
+    """user_presets_path() honours ACTARI_HOME — same convention as user_config_dir."""
+    monkeypatch.setenv("ACTARI_HOME", str(tmp_path))
     assert user_presets_path() == tmp_path / "presets.json"
 
 
@@ -237,8 +237,8 @@ def test_invalid_user_file_raises(tmp_path):
 
 
 def test_api_presets_falls_back_when_user_file_invalid(tmp_path, monkeypatch):
-    """A broken ~/.nara/presets.json must not blank the UI — bundled stays available."""
-    monkeypatch.setenv("NARA_HOME", str(tmp_path))
+    """A broken ~/.actari/presets.json must not blank the UI — bundled stays available."""
+    monkeypatch.setenv("ACTARI_HOME", str(tmp_path))
     (tmp_path / "presets.json").write_text("{not even json")
     app = create_app(_config(tmp_path))
     c = TestClient(app)
@@ -251,7 +251,7 @@ def test_api_presets_falls_back_when_user_file_invalid(tmp_path, monkeypatch):
 
 
 def test_cli_presets_path_prints_user_path(monkeypatch, tmp_path):
-    monkeypatch.setenv("NARA_HOME", str(tmp_path))
+    monkeypatch.setenv("ACTARI_HOME", str(tmp_path))
     runner = CliRunner()
     result = runner.invoke(cli_app, ["presets", "--path"])
     assert result.exit_code == 0, result.output
@@ -259,7 +259,7 @@ def test_cli_presets_path_prints_user_path(monkeypatch, tmp_path):
 
 
 def test_cli_presets_bundled_only_skips_user_file(monkeypatch, tmp_path):
-    monkeypatch.setenv("NARA_HOME", str(tmp_path))
+    monkeypatch.setenv("ACTARI_HOME", str(tmp_path))
     (tmp_path / "presets.json").write_text(
         json.dumps(
             {

@@ -35,7 +35,10 @@ def _keychain_active() -> bool:
 
     if platform.system() != "Darwin":
         return False
-    if not getattr(sys, "frozen", False) and "NARA_FORCE_KEYCHAIN" not in __import__("os").environ:
+    if (
+        not getattr(sys, "frozen", False)
+        and "ACTARI_FORCE_KEYCHAIN" not in __import__("os").environ
+    ):
         return False
     try:
         import keyring  # noqa: F401
@@ -73,7 +76,7 @@ def patch_config(body: ConfigPatch, request: Request) -> ConfigDto:
     if cfg.config_path is None:
         raise HTTPException(
             409,
-            "no ~/.nara/config.toml to update — run `nara init` first.",
+            "no ~/.actari/config.toml to update — run `actari init` first.",
         )
     if not cfg.api_key:
         raise HTTPException(
@@ -130,7 +133,7 @@ def _reveal(target: Path) -> str:
 
 @router.post("/reveal", response_model=RevealResponse)
 def reveal_config_dir(request: Request) -> RevealResponse:
-    """Open the platform file-manager pointed at ``~/.nara``."""
+    """Open the platform file-manager pointed at ``~/.actari``."""
     cfg = request.app.state.config
     target: Path = cfg.config_path.parent if cfg.config_path else user_config_dir()
     return RevealResponse(opened=_reveal(target))

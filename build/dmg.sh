@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Wrap dist/NARA Archive.app into a signed, notarized .dmg.
+# Wrap dist/actari.app into a signed, notarized .dmg.
 #
 # Usage:
 #   build/dmg.sh path/to/output.dmg path/to/NARA\ Archive.app
@@ -35,8 +35,8 @@ else
 fi
 
 VOLICON_OPT=()
-if [[ -f build/nara-archive.icns ]]; then
-  VOLICON_OPT=(--volicon "build/nara-archive.icns")
+if [[ -f build/actari.icns ]]; then
+  VOLICON_OPT=(--volicon "build/actari.icns")
 fi
 
 # Remove a stale output file — create-dmg refuses to overwrite.
@@ -49,7 +49,7 @@ echo "==> creating $DMG_OUT"
 # are populated conditionally (icon / background may be missing on a fresh
 # checkout); we always want their absence to mean "skip this flag".
 create-dmg \
-  --volname "NARA Archive" \
+  --volname "actari" \
   "${VOLICON_OPT[@]+"${VOLICON_OPT[@]}"}" \
   "${BG_OPT[@]+"${BG_OPT[@]}"}" \
   --window-pos 200 120 \

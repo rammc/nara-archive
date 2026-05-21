@@ -1,6 +1,6 @@
 """First-run setup routes for the bundled macOS app.
 
-Users who installed via DMG never see a terminal — ``nara init`` is unreachable
+Users who installed via DMG never see a terminal — ``actari init`` is unreachable
 for them. This module mirrors that wizard in HTTP form:
 
 - ``GET /setup`` serves the setup HTML (or 302s to ``/`` if already configured)
@@ -8,7 +8,7 @@ for them. This module mirrors that wizard in HTTP form:
 - ``POST /api/setup/complete`` persists the key (Keychain preferred on macOS,
   TOML fallback) plus terms acknowledgment, then redirects the browser to ``/``
 
-Middleware installed by :func:`nara.server.app.create_app` short-circuits
+Middleware installed by :func:`actari.server.app.create_app` short-circuits
 unconfigured runs by redirecting other HTML routes to ``/setup``.
 
 The module is named ``firstrun`` rather than ``setup`` on purpose:
@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field
 
 from ...config import DEFAULT_API_BASE_URL, write_config
 
-log = logging.getLogger("nara")
+log = logging.getLogger("actari")
 
 router = APIRouter(tags=["setup"])
 
@@ -95,7 +95,7 @@ def _save_to_keychain(api_key: str) -> bool:
     except ImportError:
         return False
     try:
-        keyring.set_password("dev.cramm.nara-archive", "api_key", api_key)
+        keyring.set_password("dev.cramm.actari", "api_key", api_key)
         # Heuristic: only count it as "used" when running in the bundled app
         # where Keychain is the documented default. From a pip install, we
         # still write TOML so users keep their familiar workflow.
@@ -178,7 +178,7 @@ def install_first_run_redirect(app: Any) -> None:
     Scope is intentionally narrow: this only catches *browser* navigations
     (``Accept: text/html``). JSON traffic flows through to the route handlers,
     which keep their existing 503/401 semantics (search.py raises 503 with a
-    "Run `nara init`" hint, /api/config still reports a masked-empty status).
+    "Run `actari init`" hint, /api/config still reports a masked-empty status).
     Tooling and tests therefore see the same behaviour as before this patch.
     """
 

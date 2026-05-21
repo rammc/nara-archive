@@ -7,22 +7,22 @@ from pathlib import Path
 
 import pytest
 
-from nara import config as cfgmod
+from actari import config as cfgmod
 
 
 @pytest.fixture
 def isolated_home(tmp_path, monkeypatch):
-    """Redirect ~/.nara to a temp dir and CWD to another temp dir."""
+    """Redirect ~/.actari to a temp dir and CWD to another temp dir."""
     home = tmp_path / "home"
     home.mkdir()
     cwd = tmp_path / "cwd"
     cwd.mkdir()
-    monkeypatch.setenv("NARA_HOME", str(home))
+    monkeypatch.setenv("ACTARI_HOME", str(home))
     monkeypatch.chdir(cwd)
     # Make sure no real env key leaks in.
     monkeypatch.delenv("NARA_API_KEY", raising=False)
     monkeypatch.delenv("NARA_API_BASE_URL", raising=False)
-    monkeypatch.delenv("NARA_DEFAULT_RATE", raising=False)
+    monkeypatch.delenv("ACTARI_DEFAULT_RATE", raising=False)
     return home, cwd
 
 
@@ -39,7 +39,7 @@ def test_resolve_falls_back_to_defaults_when_nothing_set(isolated_home):
     assert cfg.api_key is None
     assert cfg.api_base_url == cfgmod.DEFAULT_API_BASE_URL
     assert cfg.default_rate == cfgmod.DEFAULT_RATE
-    # No ./output present → fall through to ~/.nara/output
+    # No ./output present → fall through to ~/.actari/output
     assert cfg.output_dir == home / "output"
     assert cfg.has_api_key is False
     assert cfg.config_path is None
@@ -140,7 +140,7 @@ def test_detect_legacy_env_only_when_no_toml(isolated_home):
 
 def test_keychain_unavailable_when_not_frozen(monkeypatch):
     """Plain pip-installed CLI must NOT prefer Keychain — TOML keeps the workflow."""
-    monkeypatch.delenv("NARA_FORCE_KEYCHAIN", raising=False)
+    monkeypatch.delenv("ACTARI_FORCE_KEYCHAIN", raising=False)
     # We're not running under PyInstaller in tests.
     assert cfgmod._keychain_available() is False
     # The reader returns None without touching keyring.
@@ -148,10 +148,10 @@ def test_keychain_unavailable_when_not_frozen(monkeypatch):
 
 
 def test_keychain_read_with_force_flag(isolated_home, monkeypatch):
-    """NARA_FORCE_KEYCHAIN=1 + a fake keyring → Keychain wins over TOML key."""
+    """ACTARI_FORCE_KEYCHAIN=1 + a fake keyring → Keychain wins over TOML key."""
     home, _cwd = isolated_home
     cfgmod.write_config(api_key="from-toml", output_dir=home / "out", target=home / "config.toml")
-    monkeypatch.setenv("NARA_FORCE_KEYCHAIN", "1")
+    monkeypatch.setenv("ACTARI_FORCE_KEYCHAIN", "1")
 
     import platform as _platform
 
@@ -162,7 +162,7 @@ def test_keychain_read_with_force_flag(isolated_home, monkeypatch):
 
     fake_kr = _types.ModuleType("keyring")
     fake_kr.get_password = lambda service, account: (  # type: ignore[attr-defined]
-        "from-keychain" if service == "dev.cramm.nara-archive" else None
+        "from-keychain" if service == "dev.cramm.actari" else None
     )
     monkeypatch.setitem(_sys.modules, "keyring", fake_kr)
 
@@ -173,7 +173,7 @@ def test_keychain_read_with_force_flag(isolated_home, monkeypatch):
 def test_env_var_still_beats_keychain(isolated_home, monkeypatch):
     """NARA_API_KEY env override is the user's escape hatch — must win over Keychain."""
     home, _cwd = isolated_home
-    monkeypatch.setenv("NARA_FORCE_KEYCHAIN", "1")
+    monkeypatch.setenv("ACTARI_FORCE_KEYCHAIN", "1")
     monkeypatch.setenv("NARA_API_KEY", "from-env")
 
     import platform as _platform

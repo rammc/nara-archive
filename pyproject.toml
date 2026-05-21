@@ -1,7 +1,7 @@
 [project]
-name = "nara-archive"  # TODO before PyPI publish: confirm availability; fallback `naracat`
+name = "actari"
 version = "0.3.0"
-description = "Bulk-download NARA Catalog digital objects and assemble one PDF per File Unit; ships with a local web UI."
+description = "Your local research companion for the U.S. National Archives Catalog: bulk-download digital objects, assemble per-File-Unit PDFs, and browse it all in a local web UI. Not affiliated with NARA."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -9,7 +9,15 @@ license-files = ["LICENSE"]
 authors = [
     { name = "Christopher Ramm" },
 ]
-keywords = ["nara", "archives", "genealogy", "research", "historical-records"]
+keywords = [
+    "actari",
+    "nara",
+    "national-archives",
+    "archives",
+    "genealogy",
+    "research",
+    "historical-records",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Education",
@@ -57,7 +65,7 @@ ocr = [
 ]
 mac = [
     # Already pulled in by the platform-marker dependencies above when running
-    # on macOS — this extra exists so `pip install 'nara-archive[mac]'` is a
+    # on macOS — this extra exists so `pip install 'actari[mac]'` is a
     # discoverable noun for the install docs.
     "rumps>=0.4 ; sys_platform == 'darwin'",
     "keyring>=24.0 ; sys_platform == 'darwin'",
@@ -65,23 +73,23 @@ mac = [
 ]
 
 [project.scripts]
-nara = "nara.cli:app"
+actari = "actari.cli:app"
 # Used only by the PyInstaller-bundled macOS .app. Safe to invoke directly from
-# a venv on a Mac for development (`python -m nara.macapp.main`).
-nara-archive-app = "nara.macapp.main:main"
+# a venv on a Mac for development (`python -m actari.macapp.main`).
+actari-archive-app = "actari.macapp.main:main"
 
 [project.urls]
-Homepage = "https://github.com/rammc/nara-archive"
-Repository = "https://github.com/rammc/nara-archive"
-Issues = "https://github.com/rammc/nara-archive/issues"
-Changelog = "https://github.com/rammc/nara-archive/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/rammc/actari"
+Repository = "https://github.com/rammc/actari"
+Issues = "https://github.com/rammc/actari/issues"
+Changelog = "https://github.com/rammc/actari/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/nara"]
+packages = ["src/actari"]
 
 [tool.ruff]
 line-length = 100

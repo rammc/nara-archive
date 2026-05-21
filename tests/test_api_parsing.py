@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from nara.metadata import fetch_and_persist, normalize_response
-from nara.utils import OutputPaths
+from actari.metadata import fetch_and_persist, normalize_response
+from actari.utils import OutputPaths
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample_response.json"
 

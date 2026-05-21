@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>nara archive — setup</title>
+  <title>actari archive — setup</title>
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/setup.css">
 </head>
 <body class="setup-body">
   <main class="setup-shell">
     <header class="setup-head">
-      <h1>Welcome to nara archive</h1>
+      <h1>Welcome to actari archive</h1>
       <p class="muted">A two-minute setup, then you're ready to search the National Archives Catalog.</p>
     </header>
 
@@ -19,7 +19,7 @@
         <h2>1. Paste your NARA API key</h2>
         <p class="muted">Free for research; request at
           <a href="https://www.archives.gov/research/catalog/help/api" target="_blank" rel="noopener">archives.gov/research/catalog/help/api</a>
-          (email Catalog_API@nara.gov with a one-sentence description of your project).
+          (email Catalog_API@actari.gov with a one-sentence description of your project).
         </p>
         <div class="setup-field">
           <input id="api-key" type="text" autocomplete="off" spellcheck="false"
@@ -33,7 +33,7 @@
         <h2>2. Choose where downloads land</h2>
         <p class="muted">PDFs, manifests, and run logs all live here. The default works on most machines.</p>
         <div class="setup-field">
-          <input id="output-dir" type="text" placeholder="~/.nara/output" aria-label="Output directory">
+          <input id="output-dir" type="text" placeholder="~/.actari/output" aria-label="Output directory">
         </div>
       </li>
 
@@ -45,7 +45,7 @@
             by the National Archives and Records Administration. NARA grants <strong>10,000 API
             requests per key per month</strong> and asks consumers to keep usage polite. For
             full-archive bulk transfers (millions of files), NARA recommends the
-            <a href="https://registry.opendata.aws/nara/" target="_blank" rel="noopener">AWS Open Data mirror</a>
+            <a href="https://registry.opendata.aws/actari/" target="_blank" rel="noopener">AWS Open Data mirror</a>
             instead. This tool defaults to 0.5 seconds between requests and never parallelises downloads.
           </p>
           <label class="setup-ack">

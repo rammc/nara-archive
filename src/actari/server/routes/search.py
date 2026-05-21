@@ -23,7 +23,7 @@ def get_nara_client(request: Request) -> NaraClient:
     """Build a NaraClient from the app config. Tests override this via Depends."""
     cfg = request.app.state.config
     if not cfg.api_key:
-        raise HTTPException(503, "NARA API key not configured. Run `nara init`.")
+        raise HTTPException(503, "NARA API key not configured. Run `actari init`.")
     return NaraClient(api_key=cfg.api_key, base=cfg.api_base_url)
 
 

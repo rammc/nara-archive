@@ -1,4 +1,4 @@
-"""Interactive setup wizard for ``nara init``."""
+"""Interactive setup wizard for ``actari init``."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ NARA_TERMS_BLURB = (
 KEY_FREE_BLURB = (
     "Don't have a key? Get one for free in ~2 minutes:\n"
     "  1. Visit https://www.archives.gov/research/catalog/help/api\n"
-    "  2. Email Catalog_API@nara.gov from your research-affiliated address\n"
+    "  2. Email Catalog_API@actari.gov from your research-affiliated address\n"
     "  3. They reply with a 40-character key — paste it here."
 )
 
@@ -98,7 +98,7 @@ def run_wizard(
     console.print(
         Panel.fit(
             Text.from_markup(
-                "[bold]nara-archive[/] · setup wizard\n"
+                "[bold]actari[/] · setup wizard\n"
                 "Bulk-download NARA Catalog digital objects and assemble PDFs.\n\n"
                 "This wizard writes [cyan]" + str(target) + "[/].",
             ),
@@ -130,7 +130,7 @@ def run_wizard(
         )
         if choice == "s":
             console.print(
-                "[dim]saving unvalidated key — `nara serve` health-check will tell you[/]"
+                "[dim]saving unvalidated key — `actari serve` health-check will tell you[/]"
             )
             break
         if choice == "a":
@@ -164,8 +164,8 @@ def run_wizard(
             Text.from_markup(
                 f"[green]✓ Setup complete.[/] Config written to [cyan]{target}[/]\n\n"
                 "Next steps:\n"
-                "  [bold]nara serve[/]                       launch the web UI\n"
-                "  [bold]nara metadata --parent-naid …[/]    use the CLI directly"
+                "  [bold]actari serve[/]                       launch the web UI\n"
+                "  [bold]actari metadata --parent-naid …[/]    use the CLI directly"
             ),
             border_style="green",
         )

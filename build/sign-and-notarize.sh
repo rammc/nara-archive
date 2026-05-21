@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Sign and notarize dist/NARA Archive.app for distribution outside the
+# Sign and notarize dist/actari.app for distribution outside the
 # Mac App Store. Run after `make app` produced a working bundle.
 #
 # Required environment variables (export them in your shell or set them in
@@ -18,7 +18,7 @@
 
 set -euo pipefail
 
-APP="${APP:-dist/NARA Archive.app}"
+APP="${APP:-dist/actari.app}"
 ENTITLEMENTS="${ENTITLEMENTS:-build/entitlements.plist}"
 
 # --- env validation ------------------------------------------------------

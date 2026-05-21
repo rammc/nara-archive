@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from nara.config import Config
-from nara.downloader import JobCancelled
-from nara.jobs import JobManager
+from actari.config import Config
+from actari.downloader import JobCancelled
+from actari.jobs import JobManager
 
 
 def _config(tmp_path: Path) -> Config:

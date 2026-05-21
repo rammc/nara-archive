@@ -4,7 +4,7 @@ Hits ``https://api.github.com/repos/{owner}/{repo}/releases/latest`` exactly
 once at server startup, caches the result on ``app.state.update_info``, and
 exposes it via :func:`get_update_info`. There is no telemetry, no phone-home
 beyond this single anonymous GET, and the entire feature can be turned off
-by setting ``[updates] check_on_startup = false`` in ``~/.nara/config.toml``.
+by setting ``[updates] check_on_startup = false`` in ``~/.actari/config.toml``.
 
 Version comparison uses :class:`packaging.version.Version` when available
 and falls back to a tuple-of-ints split that's correct for the
@@ -21,9 +21,9 @@ from typing import Any
 
 import httpx
 
-log = logging.getLogger("nara.updater")
+log = logging.getLogger("actari.updater")
 
-DEFAULT_REPO = "rammc/nara-archive"
+DEFAULT_REPO = "rammc/actari"
 RELEASES_URL_TEMPLATE = "https://api.github.com/repos/{repo}/releases/latest"
 TIMEOUT_SECONDS = 8.0
 
