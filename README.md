@@ -21,12 +21,30 @@ Bulk-download every digital object under a [NARA Catalog](https://catalog.archiv
 parent NAID, assemble one consolidated PDF per File Unit, and browse the
 result in a local web UI.
 
-> [Screenshots placeholder — see `docs/screenshots/` once they're captured.]
+## Quickstart
+
+```bash
+# macOS — drag-and-drop, no terminal
+#   Open the releases page, download the .dmg, drag the app to
+#   Applications, double-click. Signed + notarized — no Gatekeeper warning.
+open https://github.com/rammc/actari/releases/latest
+
+# Cross-platform — Python CLI (Linux, Windows, Intel Macs)
+pipx install actari
+actari init      # paste your free NARA API key
+actari serve     # opens the web UI at http://127.0.0.1:8765
+```
+
+[Full installation guide →](#installation) · [Get a free NARA API key →](#getting-a-nara-api-key)
+
+> **Screenshots** land with v1.0.x. Until then, `actari serve` gives you
+> the same UI as a live preview. Placeholders live under
+> [`docs/screenshots/`](docs/screenshots/).
 
 <!--
-TODO before announce: replace this placeholder with an animated GIF showing
-Discovery → Download → Library → PDF preview. docs/screenshots/ holds the
-stills used for the README; the GIF stitches them.
+TODO before announce: replace the screenshots placeholder above with an
+animated GIF showing Discovery → Download → Library → PDF preview.
+docs/screenshots/ holds the stills used for the README.
 -->
 
 ## Why
@@ -405,7 +423,7 @@ CLI commands are first-class too — `actari metadata`, `actari filter`,
 The key is free for research and educational use.
 
 1. Visit <https://www.archives.gov/research/catalog/help/api>.
-2. Email **Catalog_API@actari.gov** describing your project (one or two
+2. Email **Catalog_API@nara.gov** describing your project (one or two
    sentences is enough — name, affiliation, intended use).
 3. They reply with a 40-character API key. Paste it into `actari init`.
 
@@ -416,7 +434,7 @@ The key is free for research and educational use.
 
 NARA grants 10,000 API requests per key per month and asks consumers to keep
 usage polite. For full-archive transfers (millions of files), they
-explicitly recommend the [AWS Open Data mirror](https://registry.opendata.aws/actari/)
+explicitly recommend the [AWS Open Data mirror](https://registry.opendata.aws/nara/)
 instead of the live API. This tool defaults to **0.5 seconds between
 requests** and never parallelises downloads.
 
@@ -690,7 +708,7 @@ to all of their maintainers.
   records themselves are works of the US government and, per
   [17 U.S.C. § 105](https://www.copyright.gov/title17/92chap1.html#105),
   not subject to copyright in the United States.
-- [NARA on AWS Open Data](https://registry.opendata.aws/actari/) — the
+- [NARA on AWS Open Data](https://registry.opendata.aws/nara/) — the
   recommended bulk mirror for full-archive workloads.
 
 If you ship a downstream project that uses `actari`, please keep

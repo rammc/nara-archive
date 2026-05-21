@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+title: "actari: a local research companion for the U.S. National Archives Catalog"
+message: "If you use this software in your research, please cite it as below."
+type: software
+authors:
+  - given-names: Christopher
+    family-names: Ramm
+abstract: >-
+  actari is an open-source desktop tool for working with the U.S. National
+  Archives (NARA) Catalog API. It performs metadata fetch, bulk download of
+  digital objects, and assembly of one consolidated PDF per File Unit, with
+  optional image recompression and OCR. A local FastAPI web UI offers
+  search, job management, and a manifest-backed library view. Not affiliated
+  with or endorsed by the U.S. National Archives and Records Administration.
+keywords:
+  - actari
+  - NARA
+  - national-archives
+  - archives
+  - genealogy
+  - digital-humanities
+  - historical-research
+  - bulk-download
+  - PDF-assembly
+license: MIT
+repository-code: "https://github.com/rammc/actari"
+url: "https://github.com/rammc/actari"
+version: "1.0.0"
+date-released: "2026-05-21"

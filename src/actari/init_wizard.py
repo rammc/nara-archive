@@ -33,7 +33,7 @@ NARA_TERMS_BLURB = (
 KEY_FREE_BLURB = (
     "Don't have a key? Get one for free in ~2 minutes:\n"
     "  1. Visit https://www.archives.gov/research/catalog/help/api\n"
-    "  2. Email Catalog_API@actari.gov from your research-affiliated address\n"
+    "  2. Email Catalog_API@nara.gov from your research-affiliated address\n"
     "  3. They reply with a 40-character key — paste it here."
 )
 
