@@ -73,14 +73,27 @@ async def _ping_nara(api_key: str, base_url: str) -> tuple[bool, str]:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(url, params={"q": "constitution", "limit": 1}, headers=headers)
     except httpx.RequestError as e:
-        return False, f"Could not reach NARA ({e}). Check your internet connection."
-    if resp.status_code == 401 or resp.status_code == 403:
-        return False, "NARA rejected the key (401/403). Double-check it for typos."
+        return False, (
+            "Couldn't reach NARA's servers. Please check that you're online "
+            f"and try again. (technical detail: {e})"
+        )
+    if resp.status_code in (401, 403):
+        return False, (
+            "NARA didn't accept that key. Please check for typos, confirm you "
+            "copied the full string from the email, and make sure your "
+            "account is active at archives.gov."
+        )
     if resp.status_code >= 500:
-        return False, f"NARA is having a bad day ({resp.status_code}). Try again in a moment."
+        return False, (
+            f"NARA's API is temporarily having trouble (HTTP {resp.status_code}). "
+            "Wait a minute and try again — your key is probably fine."
+        )
     if resp.status_code >= 400:
-        return False, f"Unexpected status {resp.status_code} from NARA."
-    return True, "Key validated successfully."
+        return False, (
+            f"Unexpected response from NARA (HTTP {resp.status_code}). "
+            "If this keeps happening, please open an issue on GitHub."
+        )
+    return True, "Looks good — NARA accepted this key."
 
 
 def _save_to_keychain(api_key: str) -> bool:

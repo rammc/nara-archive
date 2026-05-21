@@ -207,6 +207,63 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 #search-status { margin: 0 0 0.75rem 0; }
 .error { color: #e15a5a; }
 
+/* Empty-state hints (Discovery / Downloads / Library when nothing's there yet) */
+.empty-hint {
+  margin: 1rem 0 1.5rem 0;
+  padding: 1rem 1.25rem;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.empty-hint p { margin: 0 0 0.4rem 0; }
+.empty-hint p:last-child { margin-bottom: 0; }
+.empty-suggestions {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.empty-suggest {
+  cursor: pointer;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fg);
+  font-size: 0.9rem;
+}
+.empty-suggest:hover { border-color: var(--accent); color: var(--accent); }
+.empty-suggest code { font-size: 0.9rem; color: inherit; }
+.inline-cta { display: inline-block; margin-top: 0.4rem; text-decoration: none; }
+
+/* One-shot welcome banner shown the first time the user lands on the SPA
+   immediately after completing the setup wizard. */
+.first-launch-banner {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.65rem 0.85rem;
+  margin: 0 0 1rem 0;
+  border-left: 3px solid var(--accent);
+  background: rgba(217, 119, 6, 0.08);
+  border-radius: 4px;
+  font-size: 0.92rem;
+}
+.first-launch-banner strong { white-space: nowrap; }
+.first-launch-banner span { flex: 1; }
+.first-launch-banner button {
+  background: transparent;
+  border: none;
+  color: var(--fg-dim);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.3rem;
+}
+.first-launch-banner button:hover { color: var(--accent); }
+
 .card-list {
   list-style: none;
   margin: 0;

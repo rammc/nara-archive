@@ -130,7 +130,8 @@ def test_validate_key_rejects_on_401(tmp_path, monkeypatch):
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["valid"] is False
-    assert "401" in body["message"] or "rejected" in body["message"].lower()
+    msg = body["message"].lower()
+    assert "didn't accept" in msg or "401" in msg or "rejected" in msg
 
 
 def test_complete_requires_terms_acknowledged(tmp_path, monkeypatch):
@@ -188,7 +189,8 @@ def test_complete_revalidates_key_against_nara(tmp_path, monkeypatch):
         },
     )
     assert r.status_code == 422
-    assert "rejected" in r.json()["detail"].lower() or "401" in r.json()["detail"]
+    detail = r.json()["detail"].lower()
+    assert "didn't accept" in detail or "rejected" in detail or "401" in detail
 
 
 @pytest.fixture(autouse=True)

@@ -21,6 +21,11 @@
 
   <main class="content">
     <section id="discovery" class="tab-panel" hidden>
+      <div id="first-launch-banner" class="first-launch-banner" hidden>
+        <strong>Welcome to actari.</strong>
+        <span>Setup's done. Try a Discovery search for something you're researching, or pick a starter search below.</span>
+        <button type="button" id="first-launch-dismiss" aria-label="Dismiss">×</button>
+      </div>
       <h1>Discovery</h1>
       <p class="muted">Live NARA Catalog search.</p>
 
@@ -64,7 +69,16 @@
         </aside>
 
         <div class="results">
-          <div id="search-status" class="muted">Type a query to begin.</div>
+          <div id="search-empty" class="empty-hint">
+            <p>Type a query above to search NARA's Catalog, or try one of these:</p>
+            <ul class="empty-suggestions">
+              <li><button type="button" class="empty-suggest" data-q="I.G. Farben">try: <code>I.G. Farben</code></button></li>
+              <li><button type="button" class="empty-suggest" data-q="Nuremberg trials">try: <code>Nuremberg trials</code></button></li>
+              <li><button type="button" class="empty-suggest" data-q="Manhattan Project">try: <code>Manhattan Project</code></button></li>
+            </ul>
+            <p class="muted">Or pick one of the curated starter searches below.</p>
+          </div>
+          <div id="search-status" class="muted" hidden></div>
           <ul id="search-results" class="card-list" aria-live="polite"></ul>
           <nav class="pager" id="search-pager" hidden>
             <button id="pager-prev" type="button">← prev</button>
@@ -126,7 +140,11 @@
     <section id="downloads" class="tab-panel" hidden>
       <h1>Downloads</h1>
       <p class="muted">Bulk-download jobs. Polling pauses when this tab is in the background.</p>
-      <div id="jobs-empty" class="muted">No jobs yet. Start one from Discovery.</div>
+      <div id="jobs-empty" class="empty-hint">
+        <p><strong>No downloads yet.</strong></p>
+        <p class="muted">Find something interesting in the Discovery tab, click <em>Download</em> on a result card, and progress will show up here.</p>
+        <p><a href="#discovery" class="btn-primary inline-cta">Go to Discovery</a></p>
+      </div>
       <ul id="jobs-list" class="job-list" aria-live="polite"></ul>
     </section>
     <section id="library" class="tab-panel" hidden>
@@ -134,7 +152,11 @@
       <p class="muted">Local manifests and the PDFs assembled from them.</p>
 
       <div id="library-list-view">
-        <div id="library-empty" class="muted">No manifests yet. Run a download job first.</div>
+        <div id="library-empty" class="empty-hint">
+          <p><strong>Your library is empty.</strong></p>
+          <p class="muted">After your first download finishes, the resulting manifest will appear here. You'll be able to browse File Units, preview PDFs in a side panel, and search across titles and scope notes.</p>
+          <p><a href="#discovery" class="btn-primary inline-cta">Start a download</a></p>
+        </div>
         <ul id="library-cards" class="card-list"></ul>
       </div>
 

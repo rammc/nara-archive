@@ -55,8 +55,19 @@
   }
 
   function setStatus(text, isError = false) {
+    status.hidden = !text;
     status.textContent = text;
     status.classList.toggle("error", isError);
+    // Whenever a status line is shown, the empty-hint must be out of the way;
+    // they share the same vertical slot above the results list.
+    const emptyEl = document.querySelector("#search-empty");
+    if (emptyEl) emptyEl.hidden = !!text;
+  }
+
+  function showEmptyHint() {
+    setStatus("");
+    const emptyEl = document.querySelector("#search-empty");
+    if (emptyEl) emptyEl.hidden = false;
   }
 
   function clearResults() {
@@ -151,7 +162,7 @@
     const params = gatherParams(page);
     if (!params) {
       clearResults();
-      setStatus("Type a query to begin.");
+      showEmptyHint();
       return;
     }
     state.lastParams = params;
@@ -230,6 +241,19 @@
   }
 
   // --- event wiring ---
+
+  // Empty-state suggestion chips ("try: I.G. Farben" etc.) — copy text into
+  // the search box and run immediately so first-time users see results.
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+    if (!(t instanceof HTMLElement)) return;
+    const btn = t.closest(".empty-suggest");
+    if (!btn) return;
+    const q = btn.getAttribute("data-q");
+    if (!q) return;
+    qInput.value = q;
+    runSearch(1);
+  });
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();

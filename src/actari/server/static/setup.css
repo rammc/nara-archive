@@ -62,3 +62,24 @@
   gap: 0.5rem;
 }
 .setup-foot .btn-primary { align-self: flex-end; }
+
+/* "Don't have a key yet?" callout in Step 1 — visually distinct so first-run
+   users without a NARA key actually notice the link instead of clicking
+   into the empty field. */
+.setup-callout {
+  margin: 0.6rem 0 1rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: rgba(217, 119, 6, 0.06);
+  border-radius: 4px;
+  font-size: 0.92rem;
+}
+.setup-callout strong { display: block; margin-bottom: 0.3rem; }
+.setup-callout ol { margin: 0.25rem 0 0 1.1rem; padding: 0; }
+.setup-callout li { margin: 0.2rem 0; }
+.setup-callout code {
+  padding: 0 0.25rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  font-size: 0.9em;
+}

@@ -27,7 +27,7 @@
 
   apiKey.addEventListener("input", () => {
     keyValidated = false;
-    setValidateState("idle", "Click Validate to test the key.");
+    setValidateState("idle", "Click \u201CCheck this key\u201D to test it.");
     refreshSubmittable();
   });
 
@@ -36,11 +36,11 @@
   validateBtn.addEventListener("click", async () => {
     const key = (apiKey.value || "").trim();
     if (!key) {
-      setValidateState("err", "Paste a key first.");
+      setValidateState("err", "Paste your NARA key into the field above first.");
       return;
     }
     validateBtn.disabled = true;
-    setValidateState("idle", "Talking to NARA…");
+    setValidateState("idle", "Asking NARA…");
     try {
       const r = await fetch("/api/setup/validate-key", {
         method: "POST",
@@ -50,14 +50,14 @@
       const body = await r.json();
       if (body.valid) {
         keyValidated = true;
-        setValidateState("ok", body.message || "Key validated.");
+        setValidateState("ok", body.message || "Looks good — NARA accepted this key.");
       } else {
         keyValidated = false;
-        setValidateState("err", body.message || "Key rejected.");
+        setValidateState("err", body.message || "NARA didn't accept that key.");
       }
     } catch (e) {
       keyValidated = false;
-      setValidateState("err", `Network error: ${e.message}`);
+      setValidateState("err", `Couldn't reach the actari server: ${e.message}`);
     } finally {
       validateBtn.disabled = false;
       refreshSubmittable();
@@ -84,8 +84,16 @@
       }
       const result = await r.json();
       setupMsg.textContent = result.used_keychain
-        ? "Saved — your API key is now in macOS Keychain."
-        : `Saved to ${result.saved_to}.`;
+        ? "Saved — your API key is now in macOS Keychain. Loading actari…"
+        : `Saved to ${result.saved_to}. Loading actari…`;
+      // Hand the main UI a one-shot flag so it can greet the user with a
+      // "try a Discovery search" nudge instead of dropping them into a
+      // blank Discovery tab. The flag is consumed on read in app.js.
+      try {
+        sessionStorage.setItem("actari.firstLaunch", "1");
+      } catch (_) {
+        /* private-mode browsers etc. — non-critical, the nudge just won't fire */
+      }
       // Tiny delay so the success message has a moment on screen.
       setTimeout(() => {
         location.href = "/";

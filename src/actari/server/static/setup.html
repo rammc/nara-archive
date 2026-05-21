@@ -17,16 +17,20 @@
     <ol class="setup-steps">
       <li class="setup-step">
         <h2>1. Paste your NARA API key</h2>
-        <p class="muted">Free for research; request at
-          <a href="https://www.archives.gov/research/catalog/help/api" target="_blank" rel="noopener">archives.gov/research/catalog/help/api</a>
-          (email Catalog_API@nara.gov with a one-sentence description of your project).
-        </p>
+        <div class="setup-callout">
+          <strong>Don't have one yet?</strong>
+          <ol>
+            <li>Visit <a href="https://www.archives.gov/research/catalog/help/api" target="_blank" rel="noopener">archives.gov/research/catalog/help/api</a> — it's free.</li>
+            <li>Email <code>Catalog_API@nara.gov</code> with a one-sentence description of your project (name + intended use is enough).</li>
+            <li>NARA replies with a 40-character key, usually within a day. Paste it below when it arrives.</li>
+          </ol>
+        </div>
         <div class="setup-field">
           <input id="api-key" type="text" autocomplete="off" spellcheck="false"
                  placeholder="40-character key, e.g. kYz0123…xvC9" aria-label="NARA API key">
-          <button type="button" id="validate-btn" class="btn-primary">Validate</button>
+          <button type="button" id="validate-btn" class="btn-primary">Check this key</button>
         </div>
-        <p id="validate-msg" class="setup-msg muted">We'll make one test request to confirm the key works.</p>
+        <p id="validate-msg" class="setup-msg muted">We'll make one quick test request to confirm NARA accepts it.</p>
       </li>
 
       <li class="setup-step">
