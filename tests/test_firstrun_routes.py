@@ -61,7 +61,7 @@ def test_get_setup_serves_html_when_unconfigured(tmp_path):
     r = c.get("/setup", headers={"accept": "text/html"})
     assert r.status_code == 200, r.text
     assert "<html" in r.text.lower()
-    assert "actari archive" in r.text.lower()
+    assert "welcome to actari" in r.text.lower()
 
 
 def test_get_setup_redirects_when_already_configured(tmp_path):
