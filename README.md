@@ -310,7 +310,7 @@ connection. **What success looks like** — the last line will be
 something like:
 
 ```
-  installed package actari 0.3.0, installed using Python 3.12.4
+  installed package actari 1.0.0, installed using Python 3.12.4
   These apps are now globally available
     - actari
 done! ✨ 🌟 ✨
@@ -467,13 +467,13 @@ Defaults to `~/.actari/output/` (overridable in `actari init`, or
 ```
 ~/.actari/
 ├── config.toml          # API key + preferences (chmod 600 recommended)
-├── jobs.json            # job-history snapshot (persisted across restarts)
 └── output/
     ├── metadata.json
     ├── metadata-{name}.json     # one per `actari filter` subset
     ├── manifest.json            # consolidated catalog (search frontend input)
     ├── manifest-{name}.json     # per-subset manifest
     ├── state.json               # per-file download status
+    ├── jobs.json                # job-history snapshot (persisted across restarts)
     ├── errors.log               # NAID + filename + reason on failure
     ├── run.log                  # rotating, 10 MB cap, 5 backups
     ├── raw/
@@ -724,7 +724,7 @@ If you use this tool in academic or journalistic work, please cite it:
   title   = {actari: bulk-download and PDF assembly for the NARA Catalog},
   year    = {2026},
   url     = {https://github.com/rammc/actari},
-  version = {0.3.0}
+  version = {1.0.0}
 }
 ```
 

@@ -1,8 +1,9 @@
 # Release runbook (macOS DMG)
 
-Tagging `vX.Y.Z` triggers `.github/workflows/release-mac.yml`, which builds a
-universal `.app`, signs and notarizes it with Apple, wraps it in a `.dmg`,
-notarizes that too, and uploads the result to the GitHub Release.
+Tagging `vX.Y.Z` triggers `.github/workflows/release-mac.yml`, which builds an
+arm64 (Apple Silicon) `.app`, signs and notarizes it with Apple, wraps it in a
+`.dmg`, notarizes that too, and uploads the result to the GitHub Release. See
+[Architecture coverage](#architecture-coverage-v09x) below.
 
 This document is the one-time setup the maintainer has to do **before** the
 first release tag will succeed. After that, releasing is `git tag vX.Y.Z &&
