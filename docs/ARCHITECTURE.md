@@ -3,22 +3,27 @@
 ## Module map
 
 ```
-src/nara/
-├── cli.py             # Typer CLI (metadata|filter|download|build-pdfs|run|stats|verify|init|serve)
+src/actari/
+├── cli.py             # Typer CLI (metadata|filter|download|build-pdfs|run|stats|verify|init|presets|serve)
 ├── api.py             # NaraClient: requests + tenacity + TLS/HTML-fallback handling
-├── config.py          # resolve_config(): env > .env > ~/.nara/config.toml
+├── config.py          # resolve_config(): env > .env > ~/.actari/config.toml
 ├── init_wizard.py     # interactive setup (rich.prompt)
 ├── metadata.py        # Phase 1 normalizer
 ├── downloader.py      # Phase 2; supports progress_callback + cancel_event
-├── pdfbuild.py        # Phase 3; img2pdf + pypdf + magic-byte classification
+├── pdfbuild.py        # Phase 3; img2pdf + pypdf + magic-byte classification,
+│                       #          optional recompression + OCR
 ├── filter.py          # regex-based subset selection
 ├── manifest.py        # final manifest writer + verifier
 ├── jobs.py            # JobManager: asyncio worker, persistence, cancellation
+├── presets.py         # bundled + user-extensible starter searches
+├── updater.py         # GitHub-release update check
 ├── utils.py           # OutputPaths, slugify, logging, safe_get, atomic writes
+├── macapp/            # macOS menubar wrapper (rumps) — bundled in .app only
 └── server/
     ├── app.py         # FastAPI factory + lifespan
     ├── models.py      # Pydantic DTOs
-    ├── routes/        # search.py | jobs.py | library.py | config.py
+    ├── routes/        # search.py | jobs.py | library.py | config.py |
+    │                  # firstrun.py | presets.py | updates.py
     └── static/        # SPA shell; one JS file per tab; no build step
 ```
 
@@ -35,9 +40,10 @@ src/nara/
                         │ HTTP/JSON; Downloads polls every 2 s
                         ▼
 ┌──────────────────────────────────────────────────────┐
-│  FastAPI (src/nara/server/app.py)                    │
+│  FastAPI (src/actari/server/app.py)                  │
 │   /api/search   /api/records/*   /api/jobs           │
-│   /api/library  /api/config      /pdfs/*             │
+│   /api/library  /api/config      /api/presets        │
+│   /api/updates  /setup           /pdfs/*             │
 └───────────┬───────────────────────────┬──────────────┘
             │                           │
             ▼                           ▼
@@ -60,7 +66,7 @@ src/nara/
                                           │
                                           ▼
                             ┌────────────────────────┐
-                            │   ~/.nara/output/      │
+                            │   ~/.actari/output/    │
                             │   (or ./output/)       │
                             │  ├── metadata.json     │
                             │  ├── metadata-{name}…  │
@@ -101,7 +107,7 @@ env var (NARA_API_KEY)
     │
     └─► .env in CWD (loaded into env, never overrides existing values)
             │
-            └─► ~/.nara/config.toml
+            └─► ~/.actari/config.toml
                     │
                     └─► defaults baked into config.py
 ```
@@ -115,7 +121,7 @@ For `output_dir`:
             │
             └─► ./output if it exists (back-compat for project-local installs)
                     │
-                    └─► ~/.nara/output
+                    └─► ~/.actari/output
 ```
 
 ## Operational notes
@@ -124,9 +130,9 @@ For `output_dir`:
   unknown API route.** Our `_get_json` detects HTML responses and raises
   `NaraUpstreamDown`. `get_record` swallows that as "not found" since the
   symptom is route-shaped, not outage-shaped.
-- **PDFs are huge.** Source TIFFs and 6 MB JPGs flow through verbatim; no
-  recompression. Expect ~1.5 TB for the 255k-object T83 microform Series.
-  Out of scope for v1.
+- **PDFs are huge by default.** Source TIFFs and 6 MB JPGs flow through
+  verbatim unless `--recompress` is passed to Phase 3. Expect ~1.5 TB for
+  the 255k-object T83 microform Series at archival fidelity.
 - **Progress events from worker threads** are marshalled back onto the
   asyncio loop via `loop.call_soon_threadsafe`. All `Job` mutations happen
   on the asyncio side; no locks.
@@ -138,11 +144,11 @@ For `output_dir`:
 
 ## Adding a new route
 
-1. Define Pydantic DTOs in `src/nara/server/models.py`.
-2. Write the handler in `src/nara/server/routes/{topic}.py`. If you need
+1. Define Pydantic DTOs in `src/actari/server/models.py`.
+2. Write the handler in `src/actari/server/routes/{topic}.py`. If you need
    `NaraClient`, accept it via `Depends(get_nara_client)` so tests can
    swap a fake.
-3. Register the router in `src/nara/server/app.py`.
+3. Register the router in `src/actari/server/app.py`.
 4. Add a test in `tests/test_{topic}_routes.py` using `TestClient`. For
    routes that need the lifespan (job manager, etc.), use the
    `with TestClient(app) as c:` form.

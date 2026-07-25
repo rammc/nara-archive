@@ -19,8 +19,8 @@ together — keep individual stills in this folder.
 End-to-end run that produces all four shots:
 
 ```bash
-nara init                                 # if not done yet
-nara serve --no-browser &
+actari init                               # if not done yet
+actari serve --no-browser &
 open http://127.0.0.1:8765
 ```
 
@@ -42,6 +42,7 @@ captures the active window cleanly.
 
 ## Output PDF size disclosure
 
-When demoing on social, mention up-front that PDFs are not recompressed —
-a single 64-page File Unit in T83 can be 400 MB because NARA's scans are
-6-MB JPGs each. Recompression is on the roadmap.
+When demoing on social, mention up-front that PDFs are not recompressed by
+default — a single 64-page File Unit in T83 can be 400 MB because NARA's
+scans are 6-MB JPGs each. Opt-in recompression (`--recompress`) is available;
+see [Recompression](../../README.md#recompression) in the README.
