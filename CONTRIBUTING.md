@@ -36,6 +36,8 @@ Tests live in `tests/` and follow a one-file-per-module convention:
 - `test_config_resolution.py` — env / .env / TOML precedence + Keychain shim.
 - `test_api_parsing.py` — defensive normalisation of NARA responses.
 - `test_filter.py` — pure regex filter logic.
+- `test_metadata_file_resolution.py` — CLI `--metadata-file` / `--output-dir`
+  resolution across subcommands.
 - `test_pdfbuild.py` — image classification + PDF assembly + recompression + OCR.
 - `test_server_routes.py` — `/api/search`, `/api/records/*` with a stubbed
   `NaraClient` via FastAPI `Depends`.
