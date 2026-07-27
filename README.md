@@ -61,7 +61,7 @@ you can spend time reading the records, not glueing JSON together.
   with state tracking, resumable runs, and atomic writes.
 - **Local web UI** (`actari serve`) — Discovery (live search with downloadability
   badges and Record Group filter), Downloads (one-click job creation, live
-  progress, cancel/restart, inline PDF list, "Reveal in Finder"), Library
+  progress, cancel/restart, inline PDF list, "Open output folder"), Library
   (manifests with in-browser PDF preview), Settings (masked key, editable rate).
 - **Curated starter searches** (`actari presets`) — 8 hand-picked entry points
   for IG Farben / WWII industrial / Nuremberg-trials research, plus your own
@@ -81,6 +81,10 @@ you can spend time reading the records, not glueing JSON together.
   for users who never want to see a terminal, plus a
   [pipx CLI](#option-b--python-cli-via-pipx-cross-platform) for Linux,
   Windows, Intel Macs, and anyone who prefers `actari serve` from a shell.
+- **Background update check** — on `actari serve` startup, a single
+  anonymous request to GitHub Releases surfaces a banner in Settings when a
+  newer version is out; disable via `[updates] check_on_startup = false` in
+  `~/.actari/config.toml`.
 - **Zero telemetry, no cloud sync.** Server binds to `127.0.0.1` by default.
 
 ## Installation
@@ -111,14 +115,14 @@ without losing any data.
    the progress bar may say "Copying 0 items" near the end; that's normal,
    wait it out.
 4. **Eject the DMG** (right-click → Eject in the Finder sidebar).
-5. **Launch the app** from `/Applications/actari`. A small **"N"**
-   icon appears in the menu bar (top-right of the screen), and your
+5. **Launch the app** from `/Applications/actari`. The label **"NARA"**
+   appears in the menu bar (top-right of the screen), and your
    default browser opens to `http://127.0.0.1:8765`.
 6. **First-run setup runs in the browser** — paste your NARA API key
    ([how to request one](#getting-a-nara-api-key)), confirm the output
    directory, tick the NARA-terms acknowledgment, click *Get started*.
 
-To **quit**, click the menu-bar **"N"** icon → **Quit**. The local server
+To **quit**, click the menu-bar **"NARA"** label → **Quit**. The local server
 shuts down cleanly. Launch again any time from `/Applications`.
 
 **Requirements:**
@@ -511,6 +515,7 @@ actari run --parent-naid 7840517 --recompress --ocr
 actari stats                                    # counts + error summary
 actari verify                                   # check manifest entries vs. disk
 actari serve                                    # local web UI
+actari --version                                # print the installed version
 ```
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for module overview and
